@@ -13,16 +13,14 @@ def create_alert_1(df, this_year, today):
     # Clasificar condición según VACACION_GOZADA_ACTUAL
     df = df.with_columns([
         (
-            pl.when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") <= 7))
+            pl.when((pl.col("DIAS_PARA_VACACIONES") >= 0) & (pl.col("DIAS_PARA_VACACIONES") <= 7))
             .then(pl.lit("< 1 semana"))
-            .when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") <= 30))
+            .when((pl.col("DIAS_PARA_VACACIONES") > 7) & (pl.col("DIAS_PARA_VACACIONES") <= 30))
             .then(pl.lit("< 1 mes"))
-            .when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") > 30))
+            .when((pl.col("DIAS_PARA_VACACIONES") > 30))
             .then(pl.lit("> 1 mes"))
-            .when((pl.col("VACACION_GOZADA_ACTUAL") != 3))
-            .then(pl.lit("No aplica"))
-            .otherwise(pl.lit(""))
-        ).alias("PROXIMO_A_VACACIONES")
+            .otherwise(pl.lit("No aplica"))
+        ).alias("ALERTA_VACACIONES")
     ])
 
     return df
@@ -61,7 +59,7 @@ def create_alert_2(df, today):
     df = df.with_columns([
         pl.when((pl.col("DIAS_PARA_ANIVERSARIO") > 0) & (pl.col("DIAS_PARA_ANIVERSARIO") <= 7))
         .then(pl.lit("< 1 semana"))
-        .otherwise(pl.lit("Lejos de aniversario"))
+        .otherwise(pl.lit("> 1 semana"))
         .alias("ALERTA_ANIVERSARIO")
     ])
 
@@ -120,7 +118,7 @@ def create_relevant_columns(df, this_year, this_month, today):
         .alias("VACACION_GOZADA_ACTUAL")
     ])
 
-    # "VACACIONES_PENDIENTES" Dias de vacaciones acumuladas que tiene pendiente para gozar
+    # "VACACIONES_ACUMULADAS" Dias de vacaciones acumuladas que tiene pendiente para gozar
         # Crear columna de aniversario
     df = df.with_columns([
         pl.datetime(this_year-1, pl.col("Fecha Ingreso").dt.month(), pl.col("Fecha Ingreso").dt.day())
@@ -135,13 +133,17 @@ def create_relevant_columns(df, this_year, this_month, today):
         # Calcular vacaciones pendientes
     df = df.with_columns([
         (
-            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 3]))  # no ha gozado
+            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 2, 3]))  # gozando y no ha gozado
             .then(pl.col("VACACIONES_PROPORCIONALES"))
-            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([1, 2]))  # ya gozó
+            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([1]))  # ya gozó
             .then(pl.col("VACACIONES_PROPORCIONALES")-30)
             .otherwise(0.0)
-        ).round(2).alias("VACACIONES_PENDIENTES")
+        ).round(2).alias("VACACIONES_ACUMULADAS")
     ])
+
+    # (Opcional) eliminar columna intermedia si no quieres dejarla
+    df = df.drop("VACACIONES_PROPORCIONALES")
+    df = df.drop("ANIVERSARIO")
     
     return df
 
