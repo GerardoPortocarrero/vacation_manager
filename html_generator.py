@@ -1,8 +1,10 @@
 import os
 import polars as pl
 
-def generate_vacation_html(df, VACACION_GOZADA_ACTUAL_ESTADOS, dni):
-    persona = df.filter(pl.col("DNI") == dni).to_dicts()[0]
+def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+    persona = df.filter(pl.col("DNI") == DNI).to_dicts()[0]
+    mes_vacaciones = persona['Vacaciones 2024-2025']
+    mes_formateado = f"{months[mes_vacaciones.month]} {mes_vacaciones.year}"
 
     # Alertas
     alerta_vacaciones = ""
@@ -45,8 +47,8 @@ def generate_vacation_html(df, VACACION_GOZADA_ACTUAL_ESTADOS, dni):
                                 <td>{VACACION_GOZADA_ACTUAL_ESTADOS[persona['VACACION_GOZADA_ACTUAL']]}</td>
                             </tr>
                             <tr>
-                                <td style="vertical-align: top;"><strong>Mes vacaciones:</strong></td>
-                                <td>{persona['Vacaciones 2024-2025'].strftime('%Y').capitalize()}</td>
+                                <td style="vertical-align: top;"><strong>Mes programado:</strong></td>
+                                <td>{mes_formateado}</td>
                             </tr>
                         </table>
                     </td>
@@ -90,8 +92,8 @@ def generate_vacation_html(df, VACACION_GOZADA_ACTUAL_ESTADOS, dni):
 
 
 # Función que genera el HTML personalizado
-def main(project_address, df, VACACION_GOZADA_ACTUAL_ESTADOS, dni):
-    html1 = generate_vacation_html(df, VACACION_GOZADA_ACTUAL_ESTADOS, dni)
+def main(project_address, df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+    html1 = generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
 
     with open(os.path.join(project_address, f'vacation.html'), 'w', encoding='utf-8') as f:
         f.write(html1)
