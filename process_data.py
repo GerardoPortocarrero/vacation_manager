@@ -44,6 +44,4 @@ def main(project_address, document):
     # Leer csv con polars
     df = read_csv_with_pl(os.path.join(project_address, document['file_name_csv']))
 
-    print(df.schema)
-
     return df

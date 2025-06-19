@@ -27,34 +27,34 @@ def generate_vacation_html(df, VACACION_GOZADA_ACTUAL_ESTADOS, dni):
             <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
                 <tr>
                     <!-- IZQUIERDA: Datos personales -->
-                    <td valign="top" style="width: 60%; padding-right: 10px;">
+                    <td valign="top" style="width: 60%; padding-right: 12px;">
                         <!-- Nombre y cargo -->
                         <div style="margin-bottom: 12px;">
-                            <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #2c3e50; line-height: 1.3;">{persona['NOMBRE_COMPLETO']}</h2>
-                            <div style="font-size: 13px; color: #7f8c8d;">{persona['CARGO']}</div>
+                            <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #2c3e50;">{persona['NOMBRE_COMPLETO']}</h2>
+                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 2px;">{persona['CARGO']}</div>
                         </div>
 
-                        <!-- Tabla de info -->
-                        <table cellpadding="4" cellspacing="0" border="0" style="font-size: 13px; color: #333; width: 100%;">
+                        <!-- Tabla con información clave -->
+                        <table cellpadding="5" cellspacing="0" border="0" style="font-size: 13px; color: #333; width: 100%;">
                             <tr>
-                                <td style="padding: 2px 0; width: 110px;"><strong>DNI:</strong></td>
-                                <td style="padding: 2px 0;">{persona['DNI']}</td>
+                                <td style="width: 115px; vertical-align: top;"><strong>DNI:</strong></td>
+                                <td>{persona['DNI']}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 2px 0;"><strong>Estado actual:</strong></td>
-                                <td style="padding: 2px 0;">{VACACION_GOZADA_ACTUAL_ESTADOS[persona['VACACION_GOZADA_ACTUAL']]}</td>
+                                <td style="vertical-align: top;"><strong>Estado actual:</strong></td>
+                                <td>{VACACION_GOZADA_ACTUAL_ESTADOS[persona['VACACION_GOZADA_ACTUAL']]}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 2px 0;"><strong>Mes vacaciones:</strong></td>
-                                <td style="padding: 2px 0;">{persona['Vacaciones 2024-2025']}</td>
+                                <td style="vertical-align: top;"><strong>Mes vacaciones:</strong></td>
+                                <td>{persona['Vacaciones 2024-2025'].strftime('%Y').capitalize()}</td>
                             </tr>
                         </table>
                     </td>
 
-                    <!-- DERECHA: Vacaciones acumuladas (sin tocar) -->
+                    <!-- DERECHA: Vacaciones acumuladas -->
                     <td valign="middle" align="center" style="width: 40%;">
-                        <div style="background-color: #ecf0f1; padding: 12px 8px; border-radius: 8px;">
-                            <div style="font-size: 36px; font-weight: bold; color: #2c3e50; line-height: 1;">{round(persona['VACACIONES_ACUMULADAS'])}</div>
+                        <div style="background-color: #ecf0f1; padding: 12px 10px; border-radius: 10px;">
+                            <div style="font-size: 36px; font-weight: bold; color: #2c3e50;">{persona['VACACIONES_ACUMULADAS']}</div>
                             <div style="font-size: 13px; color: #7f8c8d; margin-top: 4px;">vacaciones acumuladas</div>
                         </div>
                     </td>

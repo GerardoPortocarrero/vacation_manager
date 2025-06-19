@@ -1,4 +1,5 @@
 import polars as pl
+from datetime import timedelta
 from datetime import datetime
 
 # Crear columna que me indique a cuanto tiempo esta de tener vacaciones
@@ -98,8 +99,8 @@ def create_relevant_columns(df, this_year, this_month, today):
     df = df.with_columns([
         pl.when(
             pl.col(vaca_col).is_not_null() &
-            (pl.col(vaca_col).dt.year() == this_year) &
-            (pl.col(vaca_col).dt.month() == this_month)
+            (pl.lit(today) >= pl.col(vaca_col)) &
+            (pl.lit(today) <= (pl.col(vaca_col) + timedelta(days=30)))
         ).then(2)
         
         .when(
