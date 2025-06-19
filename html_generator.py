@@ -26,40 +26,42 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
       <tr>
         <!-- Columna Izquierda -->
         <td width="40%" valign="top" style="border-right: 1px solid #ddd; padding: 10px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; table-layout: fixed;">
                 <tr>
-                    <!-- IZQUIERDA: Datos personales -->
-                    <td valign="top" style="width: 60%; padding-right: 12px;">
-                        <!-- Nombre y cargo -->
-                        <div style="margin-bottom: 12px;">
-                            <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #2c3e50;">{persona['NOMBRE_COMPLETO']}</h2>
-                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 2px;">{persona['CARGO']}</div>
-                        </div>
+                <!-- IZQUIERDA: Datos personales -->
+                <td valign="middle" style="width: 60%; padding-right: 16px;">
+                    <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <!-- Nombre y cargo -->
+                    <div style="margin-bottom: 10px;">
+                        <div style="font-size: 18px; font-weight: bold; color: #2c3e50;">{persona['NOMBRE_COMPLETO']}</div>
+                        <div style="font-size: 13px; color: #7f8c8d;">{persona['CARGO']}</div>
+                    </div>
 
-                        <!-- Tabla con información clave -->
-                        <table cellpadding="5" cellspacing="0" border="0" style="font-size: 13px; color: #333; width: 100%;">
-                            <tr>
-                                <td style="width: 115px; vertical-align: top;"><strong>DNI:</strong></td>
-                                <td>{persona['DNI']}</td>
-                            </tr>
-                            <tr>
-                                <td style="vertical-align: top;"><strong>Estado actual:</strong></td>
-                                <td>{VACACION_GOZADA_ACTUAL_ESTADOS[persona['VACACION_GOZADA_ACTUAL']]}</td>
-                            </tr>
-                            <tr>
-                                <td style="vertical-align: top;"><strong>Mes programado:</strong></td>
-                                <td>{mes_formateado}</td>
-                            </tr>
-                        </table>
-                    </td>
+                    <!-- Info técnica -->
+                    <table cellpadding="4" cellspacing="0" border="0" style="width: 100%; font-size: 13px; color: #2c3e50;">
+                        <tr>
+                        <td style="width: 105px;"><strong>DNI:</strong></td>
+                        <td>{persona['DNI']}</td>
+                        </tr>
+                        <tr>
+                        <td><strong>Estado actual:</strong></td>
+                        <td>{VACACION_GOZADA_ACTUAL_ESTADOS.get(persona['VACACION_GOZADA_ACTUAL'], 'Desconocido')}</td>
+                        </tr>
+                        <tr>
+                        <td><strong>Mes programado:</strong></td>
+                        <td>{mes_formateado}</td>
+                        </tr>
+                    </table>
+                    </div>
+                </td>
 
-                    <!-- DERECHA: Vacaciones acumuladas -->
-                    <td valign="middle" align="center" style="width: 40%;">
-                        <div style="background-color: #ecf0f1; padding: 12px 10px; border-radius: 10px;">
-                            <div style="font-size: 36px; font-weight: bold; color: #2c3e50;">{persona['VACACIONES_ACUMULADAS']}</div>
-                            <div style="font-size: 13px; color: #7f8c8d; margin-top: 4px;">vacaciones acumuladas</div>
-                        </div>
-                    </td>
+                <!-- DERECHA: Vacaciones acumuladas -->
+                <td valign="middle" align="center" style="width: 40%;">
+                    <div style="background-color: #ecf0f1; padding: 20px 10px; border-radius: 10px; display: inline-block;">
+                    <div style="font-size: 48px; font-weight: bold; color: #2c3e50;">{persona['VACACIONES_ACUMULADAS']}</div>
+                    <div style="font-size: 13px; color: #7f8c8d; margin-top: 4px;">vacaciones acumuladas</div>
+                    </div>
+                </td>
                 </tr>
             </table>
         </td>
