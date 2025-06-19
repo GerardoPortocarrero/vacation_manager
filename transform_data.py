@@ -1,6 +1,72 @@
 import polars as pl
 from datetime import datetime
 
+# Crear columna que me indique a cuanto tiempo esta de tener vacaciones
+def create_alert_1(df, this_year, today):
+    vacaciones_col = f"Vacaciones {this_year-1}-{this_year}"
+
+    # Calcular días restantes para vacaciones
+    df = df.with_columns([
+        (pl.col(vacaciones_col) - pl.lit(today)).dt.total_days().alias("DIAS_PARA_VACACIONES")
+    ])
+
+    # Clasificar condición según VACACION_GOZADA_ACTUAL
+    df = df.with_columns([
+        (
+            pl.when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") <= 7))
+            .then(pl.lit("< 1 semana"))
+            .when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") <= 30))
+            .then(pl.lit("< 1 mes"))
+            .when((pl.col("VACACION_GOZADA_ACTUAL") == 3) & (pl.col("DIAS_PARA_VACACIONES") > 30))
+            .then(pl.lit("> 1 mes"))
+            .when((pl.col("VACACION_GOZADA_ACTUAL") != 3))
+            .then(pl.lit("No aplica"))
+            .otherwise(pl.lit(""))
+        ).alias("PROXIMO_A_VACACIONES")
+    ])
+
+    return df
+
+# Crear columna que me indique a cuanto tiempo esta de cumplir aniversario
+def create_alert_2(df, today):
+    # Paso 1: Calcular el aniversario de este año
+    df = df.with_columns([
+        pl.datetime(
+            year=pl.lit(today.year),
+            month=pl.col("Fecha Ingreso").dt.month(),
+            day=pl.col("Fecha Ingreso").dt.day()
+        ).alias("ANIVERSARIO_TEMP")
+    ])
+
+    # Paso 2: Ajustar si el aniversario ya pasó (asignar año siguiente)
+    df = df.with_columns([
+        pl.when(pl.col("ANIVERSARIO_TEMP") < pl.lit(today))
+        .then(
+            pl.datetime(
+                year=pl.lit(today.year + 1),
+                month=pl.col("Fecha Ingreso").dt.month(),
+                day=pl.col("Fecha Ingreso").dt.day()
+            )
+        )
+        .otherwise(pl.col("ANIVERSARIO_TEMP"))
+        .alias("PROXIMO_ANIVERSARIO")
+    ])
+
+    # Paso 3: Calcular los días que faltan
+    df = df.with_columns([
+        (pl.col("PROXIMO_ANIVERSARIO") - pl.lit(today)).dt.total_days().alias("DIAS_PARA_ANIVERSARIO")
+    ])
+
+    # Paso 4: Crear la alerta
+    df = df.with_columns([
+        pl.when((pl.col("DIAS_PARA_ANIVERSARIO") > 0) & (pl.col("DIAS_PARA_ANIVERSARIO") <= 7))
+        .then(pl.lit("< 1 semana"))
+        .otherwise(pl.lit("Lejos de aniversario"))
+        .alias("ALERTA_ANIVERSARIO")
+    ])
+
+    return df
+
 # Crear las columnas necesarias
 def create_relevant_columns(df, this_year, this_month, today):
     # "DIAS_ACUMULADOS"
@@ -76,10 +142,21 @@ def create_relevant_columns(df, this_year, this_month, today):
             .otherwise(0.0)
         ).round(2).alias("VACACIONES_PENDIENTES")
     ])
-
-    # for x in df.select(['NOMBRES', 'VACACIONES_GOZADAS', 'VACACION_GOZADA_ACTUAL', 'VACACIONES_PENDIENTES']).iter_rows():
-    #     print(x[0], x[1], x[2], x[3])
     
+    return df
+
+# Unir las columnas 'NOMBRES' y 'APELLIDOS'
+def create_column_fullname(df):
+    # Unir columnas y limpiar caracteres no deseados
+    df = df.with_columns([
+        (
+            (pl.col("NOMBRES") + " " + pl.col("APELLIDOS"))
+            .str.replace_all(r"[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]", "")  # Eliminar todo menos letras y espacios
+            .str.strip_chars()
+            .alias("NOMBRE_COMPLETO")
+        )
+    ])
+
     return df
 
 # Establecer los tipos de datos correctos en las columnas
@@ -110,7 +187,16 @@ def main(df):
     # Setear los tipos de datos
     df = set_data_types(df, initial_year, this_year, date_format)
 
+    # Crear columna 'NOMBRE_COMPLETO'
+    df = create_column_fullname(df)
+
     # Calcular las columnas faltantes
     df = create_relevant_columns(df, this_year, this_month, today)
+
+    # Alerta 1: A un mes o una semana de entrar a vacaciones
+    df = create_alert_1(df, this_year, today)
+
+    # Alerta 2: A una semana de cumplir aniversario
+    df = create_alert_2(df, today)
 
     return df
