@@ -38,11 +38,12 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
             elif fecha is not None and "subsidio" in str(fecha).lower():
                 historial_filas.append(f"<tr><td>{year}-{year+1}</td><td>-</td><td>Subsidio</td></tr>")
 
-    # Agregar el periodo actual si no está en historial y si hay mes válido
+    # Agregar el periodo actual si no está en historial
     periodo_actual = "2024-2025"
     estado_actual = VACACION_GOZADA_ACTUAL_ESTADOS.get(persona['VACACION_GOZADA_ACTUAL'], 'Desconocido')
-    if mes_formateado and not any(periodo_actual in fila for fila in historial_filas):
-        historial_filas.append(f"<tr><td>{periodo_actual}</td><td>{mes_formateado.split()[0]}</td><td>{estado_actual}</td></tr>")
+    if not any(periodo_actual in fila for fila in historial_filas):
+        if mes_formateado:
+            historial_filas.append(f"<tr><td>{periodo_actual}</td><td>{mes_formateado.split()[0]}</td><td>{estado_actual}</td></tr>")
 
     if historial_filas:
         historial_html = f"""
@@ -70,7 +71,7 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
         <td colspan=\"2\" valign=\"top\" style=\"padding: 0;\">
           <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: fixed;\">
             <tr>
-              <td valign=\"top\" style=\"width: 60%; padding: 20px; border-right: 1px solid #ddd;\">
+              <td valign=\"top\" style=\"width: 50%; padding: 20px;\">
                 <div style=\"font-size: 20px; font-weight: bold; color: #2c3e50; line-height: 1.2; margin-bottom: 4px;\">{persona['NOMBRE_COMPLETO']}</div>
                 <div style=\"font-size: 13px; color: #7f8c8d; margin-bottom: 16px;\">{persona['CARGO']}</div>
                 <table cellpadding=\"5\" cellspacing=\"0\" border=\"0\" style=\"font-size: 13px; color: #2c3e50; width: 100%;\">
@@ -79,12 +80,24 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
                     <td>{persona['DNI']}</td>
                   </tr>
                   <tr>
+                    <td><strong>Fecha ingreso:</strong></td>
+                    <td>{persona.get('Fecha Ingreso', '')}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Localidad:</strong></td>
+                    <td>Pedregal</td>
+                  </tr>
+                  <tr>
                     <td><strong>Estado actual:</strong></td>
                     <td>{estado_actual}</td>
                   </tr>
+                  <tr>
+                    <td><strong>Mes programado:</strong></td>
+                    <td>{mes_formateado}</td>
+                  </tr>
                 </table>
               </td>
-              <td valign=\"top\" style=\"width: 40%; padding: 20px; text-align: center;\">
+              <td valign=\"top\" style=\"width: 50%; padding: 20px; text-align: center;\">
                 <div style=\"background-color: #ecf0f1; padding: 24px 16px; border-radius: 10px; display: inline-block; width: 100%;\">
                   <div style=\"font-size: 60px; font-weight: bold; color: #2c3e50; line-height: 1.1;\">{persona['VACACIONES_ACUMULADAS']}<span style=\"font-size: 20px; font-weight: normal; color: #7f8c8d;\"> días</span></div>
                   <div style=\"font-size: 14px; color: #7f8c8d;\">de vacaciones acumuladas</div>
