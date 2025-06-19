@@ -7,15 +7,19 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     mes_formateado = f"{months[mes_vacaciones.month]} {mes_vacaciones.year}"
 
     # Alertas
-    alerta_vacaciones = ""
+    alertas = []
     if persona["ALERTA_VACACIONES"] == "< 1 semana":
-        alerta_vacaciones = '<div style="background-color: #e74c3c; color: white; padding: 10px; margin-bottom: 10px;">🚨 A una semana de entrar a vacaciones</div>'
+        alertas.append('<div style="background-color: #e74c3c; color: white; padding: 12px; border-radius: 6px;">🚨 A una semana de entrar a vacaciones</div>')
     elif persona["ALERTA_VACACIONES"] == "< 1 mes":
-        alerta_vacaciones = '<div style="background-color: #f1c40f; color: #000; padding: 10px; margin-bottom: 10px;">⚠️ A un mes de entrar a vacaciones</div>'
+        alertas.append('<div style="background-color: #f1c40f; color: #000; padding: 12px; border-radius: 6px;">⚠️ A un mes de entrar a vacaciones</div>')
 
-    alerta_aniversario = ""
     if persona["ALERTA_ANIVERSARIO"] == "< 1 semana":
-        alerta_aniversario = '<div style="background-color: #3498db; color: white; padding: 10px;">📌 A una semana de cumplir aniversario</div>'
+        alertas.append('<div style="background-color: #3498db; color: white; padding: 12px; border-radius: 6px;">📌 A una semana de cumplir aniversario</div>')
+
+    if not alertas:
+        alertas.append('<div style="background-color: #f8f9fa; color: #7f8c8d; padding: 12px; border-radius: 6px; font-style: italic;">ℹ️ No hay alertas importantes por el momento.</div>')
+
+    alertas_html = '<div style="margin-top: 20px;">' + ''.join(alertas) + '</div>'
 
     # HTML final
     html = f"""
@@ -25,45 +29,48 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
       <tr>
         <!-- Columna Izquierda -->
-        <td width="40%" valign="top" style="border-right: 1px solid #ddd; padding: 10px 20px;">
+        <td width="40%" valign="top" style="border-right: 1px solid #ddd; padding: 15px 24px;">
             <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; table-layout: fixed;">
                 <tr>
-                <!-- IZQUIERDA: Datos personales -->
-                <td valign="middle" style="width: 60%; padding-right: 16px;">
-                    <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                    <!-- Nombre y cargo -->
-                    <div style="margin-bottom: 10px;">
-                        <div style="font-size: 18px; font-weight: bold; color: #2c3e50;">{persona['NOMBRE_COMPLETO']}</div>
-                        <div style="font-size: 13px; color: #7f8c8d;">{persona['CARGO']}</div>
-                    </div>
+                <!-- IZQUIERDA: Datos personales con mejor estructura -->
+                    <td valign="top" style="width: 55%; padding-right: 20px;">
+                        <!-- Nombre -->
+                        <div style="margin-bottom: 8px;">
+                        <div style="font-size: 20px; font-weight: bold; color: #2c3e50; line-height: 1.2;">{persona['NOMBRE_COMPLETO']}</div>
+                        </div>
 
-                    <!-- Info técnica -->
-                    <table cellpadding="4" cellspacing="0" border="0" style="width: 100%; font-size: 13px; color: #2c3e50;">
-                        <tr>
-                        <td style="width: 105px;"><strong>DNI:</strong></td>
-                        <td>{persona['DNI']}</td>
-                        </tr>
-                        <tr>
-                        <td><strong>Estado actual:</strong></td>
-                        <td>{VACACION_GOZADA_ACTUAL_ESTADOS.get(persona['VACACION_GOZADA_ACTUAL'], 'Desconocido')}</td>
-                        </tr>
-                        <tr>
-                        <td><strong>Mes programado:</strong></td>
-                        <td>{mes_formateado}</td>
-                        </tr>
-                    </table>
-                    </div>
-                </td>
+                        <!-- Cargo -->
+                        <div style="font-size: 13px; color: #7f8c8d; margin-bottom: 16px;">{persona['CARGO']}</div>
 
-                <!-- DERECHA: Vacaciones acumuladas -->
-                <td valign="middle" align="center" style="width: 40%;">
-                    <div style="background-color: #ecf0f1; padding: 20px 10px; border-radius: 10px; display: inline-block;">
-                    <div style="font-size: 48px; font-weight: bold; color: #2c3e50;">{persona['VACACIONES_ACUMULADAS']}</div>
-                    <div style="font-size: 13px; color: #7f8c8d; margin-top: 4px;">vacaciones acumuladas</div>
-                    </div>
-                </td>
+                        <!-- Tabla de información con espaciado -->
+                        <table cellpadding="5" cellspacing="0" border="0" style="font-size: 13px; color: #2c3e50; width: 100%;">
+                        <tr>
+                            <td style="width: 110px; vertical-align: top;"><strong>DNI:</strong></td>
+                            <td>{persona['DNI']}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;"><strong>Estado actual:</strong></td>
+                            <td>{VACACION_GOZADA_ACTUAL_ESTADOS.get(persona['VACACION_GOZADA_ACTUAL'], 'Desconocido')}</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;"><strong>Mes programado:</strong></td>
+                            <td>{mes_formateado}</td>
+                        </tr>
+                        </table>
+                    </td>
+
+                    <!-- DERECHA: Vacaciones acumuladas -->
+                    <td valign="top" align="center" style="width: 50%;">
+                        <div style="background-color: #ecf0f1; padding: 20px 16px; border-radius: 10px; display: inline-block;">
+                        <div style="font-size: 54px; font-weight: bold; color: #2c3e50; line-height: 1;">{persona['VACACIONES_ACUMULADAS']}</div>
+                        <div style="font-size: 14px; color: #7f8c8d; margin-top: 6px;">vacaciones acumuladas</div>
+                        </div>
+                    </td>
                 </tr>
             </table>
+            <!-- ALERTAS -->
+            <h3 style="margin-top: 30px; color: #34495e;">🔔 Alertas</h3>
+            {alertas_html}
         </td>
 
         <!-- Columna Derecha -->
@@ -79,9 +86,6 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
                 <tr><td>2023-2024</td><td>Mayo</td><td>Gozado</td></tr>
             </table>
 
-            <h3 style="margin-top: 30px; color: #34495e;">🔔 Alertas</h3>
-            {alerta_vacaciones}
-            {alerta_aniversario}
         </td>
       </tr>
     </table>
@@ -90,7 +94,6 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     </html>
     """
     return html
-
 
 
 # Función que genera el HTML personalizado
