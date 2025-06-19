@@ -55,8 +55,8 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
               <!-- DERECHA: Vacaciones acumuladas -->
               <td valign="top" style="width: 50%; padding: 20px; text-align: center;">
                 <div style="background-color: #ecf0f1; padding: 24px 16px; border-radius: 10px; display: inline-block; width: 100%;">
-                  <div style="font-size: 60px; font-weight: bold; color: #2c3e50;">{persona['VACACIONES_ACUMULADAS']}</div>
-                  <div style="font-size: 14px; color: #7f8c8d;">vacaciones acumuladas</div>
+                  <div style="font-size: 60px; font-weight: bold; color: #2c3e50; line-height: 1.1;">{persona['VACACIONES_ACUMULADAS']}<span style="font-size: 20px; font-weight: normal; color: #7f8c8d;"> días</span></div>
+                  <div style="font-size: 14px; color: #7f8c8d;">de vacaciones acumuladas</div>
                 </div>
               </td>
             </tr>
