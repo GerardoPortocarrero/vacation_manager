@@ -373,43 +373,43 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
 
 # Reporte del consolidado de trabajadores
 def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict) -> str:
-    columnas = [
-        'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
-        'Vacaciones 2020-2021', 'Vacaciones 2021-2022', 'Vacaciones 2022-2023',
-        'Vacaciones 2023-2024', 'Vacaciones 2024-2025',
-        'VACACION_GOZADA_ACTUAL', 'VACACIONES_ACUMULADAS',
-        'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
-    ]
+    # Automatizar columnas de vacaciones
+    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year + 1)]
+    vacation_columns = [col for col in vacation_years if col in df.columns]
 
-    # Preprocesar el DataFrame
+    # Crear historial de vacaciones como una sola columna HTML
+    df = df.with_columns([
+        pl.struct(vacation_columns).map_elements(lambda row: "<br>".join([
+            f"{col.split()[-1]}: {row[col]}" for col in vacation_columns if row.get(col)
+        ])).alias("HISTORIAL_VACACIONES")
+    ])
+
+    # Mapear estado de vacaciones
     estado_col = (
-        pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(VACACION_GOZADA_ACTUAL_ESTADOS[0])
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(VACACION_GOZADA_ACTUAL_ESTADOS[1])
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(VACACION_GOZADA_ACTUAL_ESTADOS[2])
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(VACACION_GOZADA_ACTUAL_ESTADOS[3])
-        .otherwise("Desconocido")
+        pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[0]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[1]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[2]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[3]))
+        .otherwise(pl.lit("Desconocido"))
         .alias("ESTADO_VACACION_ACTUAL")
     )
 
-    # Automatizar columnas de vacaciones
-    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year + 1)]
-    vacation_columns = [
-        pl.col(col).cast(pl.Utf8).fill_null("") for col in vacation_years if col in df.columns
-    ]
-
-    # Aplicar todas las columnas nuevas
     df = df.with_columns([
-        estado_col,
-        *vacation_columns
+        estado_col
     ])
+
+    columnas = [
+        'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
+        'HISTORIAL_VACACIONES', 'ESTADO_VACACION_ACTUAL', 'VACACIONES_ACUMULADAS',
+        'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
+    ]
 
     rows = df.select(columnas).rows()
 
-    # Armar HTML
     html = f"""
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
         <style>
             body {{
                 font-family: Arial, sans-serif;
@@ -441,9 +441,9 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
             th, td {{
                 border: 1px solid #ccc;
                 padding: 6px;
-                text-align: center;
+                text-align: left;
                 font-size: 13px;
-                vertical-align: middle;
+                vertical-align: top;
             }}
             th {{
                 background-color: #2c3e50;
@@ -452,18 +452,16 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class=\"container\">
             <h1>📋 Consolidado de Vacaciones</h1>
             <table>
                 <tr>
     """
 
-    # Encabezados
     for col in columnas:
         html += f"<th>{col}</th>"
     html += "</tr>"
 
-    # Filas
     for row in rows:
         html += "<tr>"
         for cell in row:
@@ -479,6 +477,7 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     """
 
     return html
+
 
 # Función que genera el HTML personalizado
 def main(
