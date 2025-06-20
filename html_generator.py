@@ -433,9 +433,8 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     html = f"""
     <html>
     <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
-      <div style=\"max-width: 1000px; margin: auto; background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">
-        <h2 style=\"text-align: center; color: #2c3e50; margin-bottom: 25px;\">📋 Consolidado de Vacaciones</h2>
-        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: auto; border-collapse: collapse;\">
+      <div style=\"margin: auto; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">
+        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; border-collapse: collapse; border: 1px solid #ccc;\">
           <tr>
     """
 
@@ -458,6 +457,7 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     """
 
     return html
+
 
 # Función que genera el HTML personalizado
 def main(
