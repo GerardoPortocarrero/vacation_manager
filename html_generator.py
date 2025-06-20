@@ -75,62 +75,62 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
     # HTML final
     html = f"""
     <html>
-    <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
+        <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
 
-    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);\">
-      <tr>
-        <td colspan=\"2\" valign=\"top\" style=\"padding: 0;\">
-          <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: fixed;\">
-            <tr>
-              <td valign=\"top\" style=\"width: 50%; padding: 20px;\">
-                <div style=\"font-size: 20px; font-weight: bold; color: #2c3e50; line-height: 1.2; margin-bottom: 4px;\">{persona['NOMBRE_COMPLETO']}</div>
-                <div style=\"font-size: 13px; color: #7f8c8d; margin-bottom: 16px;\">{persona['CARGO']}</div>
-                <table cellpadding=\"5\" cellspacing=\"0\" border=\"0\" style=\"font-size: 13px; color: #2c3e50; width: 100%;\">
-                  <tr>
-                    <td style=\"width: 110px;\"><strong>DNI:</strong></td>
-                    <td>{persona['DNI']}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Fecha ingreso:</strong></td>
-                    <td>{fecha_ingreso_str}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Localidad:</strong></td>
-                    <td>Pedregal</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Estado actual:</strong></td>
-                    <td>{estado_actual}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Mes programado:</strong></td>
-                    <td>{mes_formateado}</td>
-                  </tr>
-                </table>
-              </td>
-              <td valign=\"top\" style=\"width: 50%; padding: 20px; text-align: center;\">
-                <div style=\"background-color: #ecf0f1; padding: 24px 16px; border-radius: 10px; display: inline-block; width: 100%;\">
-                  <div style=\"font-size: 60px; font-weight: bold; color: #2c3e50; line-height: 1.1;\">{persona['VACACIONES_ACUMULADAS']}<span style=\"font-size: 20px; font-weight: normal; color: #7f8c8d;\"> días</span></div>
-                  <div style=\"font-size: 14px; color: #7f8c8d;\">de vacaciones acumuladas</div>
-                </div>
-              </td>
-            </tr>
-          </table>
+        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);\">
+        <tr>
+            <td colspan=\"2\" valign=\"top\" style=\"padding: 0;\">
+            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: fixed;\">
+                <tr>
+                <td valign=\"top\" style=\"width: 50%; padding: 20px;\">
+                    <div style=\"font-size: 20px; font-weight: bold; color: #2c3e50; line-height: 1.2; margin-bottom: 4px;\">{persona['NOMBRE_COMPLETO']}</div>
+                    <div style=\"font-size: 13px; color: #7f8c8d; margin-bottom: 16px;\">{persona['CARGO']}</div>
+                    <table cellpadding=\"5\" cellspacing=\"0\" border=\"0\" style=\"font-size: 13px; color: #2c3e50; width: 100%;\">
+                    <tr>
+                        <td style=\"width: 110px;\"><strong>DNI:</strong></td>
+                        <td>{persona['DNI']}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha ingreso:</strong></td>
+                        <td>{fecha_ingreso_str}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Localidad:</strong></td>
+                        <td>Pedregal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado actual:</strong></td>
+                        <td>{estado_actual}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mes programado:</strong></td>
+                        <td>{mes_formateado}</td>
+                    </tr>
+                    </table>
+                </td>
+                <td valign=\"top\" style=\"width: 50%; padding: 20px; text-align: center;\">
+                    <div style=\"background-color: #ecf0f1; padding: 24px 16px; border-radius: 10px; display: inline-block; width: 100%;\">
+                    <div style=\"font-size: 60px; font-weight: bold; color: #2c3e50; line-height: 1.1;\">{persona['VACACIONES_ACUMULADAS']}<span style=\"font-size: 20px; font-weight: normal; color: #7f8c8d;\"> días</span></div>
+                    <div style=\"font-size: 14px; color: #7f8c8d;\">de vacaciones acumuladas</div>
+                    </div>
+                </td>
+                </tr>
+            </table>
 
-          <div style=\"padding: 20px 30px 10px 30px;\">
-            <h3 style=\"margin: 20px 0 10px; color: #34495e;\">🔔 Alertas</h3>
-            {alertas_html}
-          </div>
+            <div style=\"padding: 20px 30px 10px 30px;\">
+                <h3 style=\"margin: 20px 0 10px; color: #34495e;\">🔔 Alertas</h3>
+                {alertas_html}
+            </div>
 
-          <div style=\"padding: 10px 30px 20px 30px;\">
-            <h3 style=\"margin-top: 20px; color: #34495e;\">📅 Historial de Vacaciones</h3>
-            {historial_html}
-          </div>
-        </td>
-      </tr>
-    </table>
+            <div style=\"padding: 10px 30px 20px 30px;\">
+                <h3 style=\"margin-top: 20px; color: #34495e;\">📅 Historial de Vacaciones</h3>
+                {historial_html}
+            </div>
+            </td>
+        </tr>
+        </table>
 
-    </body>
+        </body>
     </html>
     """
     return html
@@ -145,73 +145,53 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
     html = f"""
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
         <style>
             body {{
                 font-family: Arial, sans-serif;
                 background-color: #f4f6f8;
                 margin: 0;
-                padding: 0;
+                padding: 30px;
             }}
             .container {{
-                max-width: 900px;
+                max-width: 1000px;
                 margin: auto;
-                padding: 20px 30px;
-                background-color: #ffffff;
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.08);
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.05);
+                padding: 30px;
             }}
             h1 {{
                 text-align: center;
-                font-size: 30px;
+                font-size: 28px;
                 color: #2c3e50;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
             }}
             .description {{
                 text-align: center;
-                font-size: 16px;
+                font-size: 15px;
                 color: #7f8c8d;
                 margin-bottom: 30px;
             }}
-            .section {{
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 2px solid #ecf0f1;
-            }}
-            .section-title {{
-                text-align: center;
-                font-size: 22px;
-                color: #34495e;
-                position: relative;
-                margin-bottom: 25px;
-            }}
-            .section-title::after {{
-                content: "";
-                display: block;
-                width: 60px;
-                height: 3px;
-                background-color: #3498db;
-                margin: 8px auto 0 auto;
-                border-radius: 2px;
-            }}
             h3 {{
-                margin: 20px 0 5px 0;
-                padding: 10px;
+                margin: 20px 0 10px;
+                padding: 12px;
                 color: white;
-                border-radius: 5px;
-                font-size: 15px;
+                border-radius: 6px;
+                font-size: 16px;
                 text-align: center;
             }}
             table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 25px;
+                font-size: 14px;
+                border: 1px solid #ccc;
             }}
             th, td {{
                 border: 1px solid #ccc;
-                padding: 6px;
+                padding: 10px;
                 text-align: center;
-                font-size: 13px;
+                vertical-align: middle;
             }}
             th {{
                 background-color: #2c3e50;
@@ -220,10 +200,9 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class=\"container\">
             <h1>📊 Alerta de Vacaciones</h1>
-            <p class="description">Personal con vacaciones programadas próximamente.</p>
-            <div class="section">
+            <p class=\"description\">Este informe muestra el personal con vacaciones próximas según su programación.</p>
     """
 
     for rango in ['< 1 semana', '< 1 mes']:
@@ -234,19 +213,22 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
         columnas = ['NOMBRE_COMPLETO', 'CARGO', 'VACACIONES_ACUMULADAS', f'Vacaciones {this_year-1}-{this_year}']
         rows = df_rango.select(columnas).rows()
 
-        # Generar tabla HTML manualmente
         tabla_html = "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
         for row in rows:
             tabla_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
         tabla_html += "</table>"
 
+        mensaje = {
+            '< 1 semana': '🚨 Vacaciones en menos de una semana',
+            '< 1 mes': '⏰ Vacaciones en menos de un mes'
+        }[rango]
+
         html += f"""
-                <h3 style="background-color:{colores[rango]};">{rango.upper()}</h3>
-                {tabla_html}
+            <h3 style=\"background-color:{colores[rango]};\">{mensaje}</h3>
+            {tabla_html}
         """
 
     html += """
-            </div>
         </div>
     </body>
     </html>
@@ -289,34 +271,14 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
                 color: #7f8c8d;
                 margin-bottom: 30px;
             }}
-            .section {{
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 2px solid #ecf0f1;
-            }}
-            .section-title {{
-                text-align: center;
-                font-size: 22px;
-                color: #34495e;
-                position: relative;
-                margin-bottom: 25px;
-            }}
-            .section-title::after {{
-                content: "";
-                display: block;
-                width: 60px;
-                height: 3px;
-                background-color: #3498db;
-                margin: 8px auto 0 auto;
-                border-radius: 2px;
-            }}
             h3 {{
-                margin: 20px 0 5px 0;
-                padding: 10px;
+                background-color: {color};
                 color: white;
-                border-radius: 5px;
-                font-size: 15px;
+                padding: 12px;
+                border-radius: 6px;
+                font-size: 16px;
                 text-align: center;
+                margin: 20px 0 15px 0;
             }}
             table {{
                 width: 100%;
@@ -325,7 +287,7 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
             }}
             th, td {{
                 border: 1px solid #ccc;
-                padding: 6px;
+                padding: 8px 10px;
                 text-align: center;
                 font-size: 13px;
             }}
@@ -333,13 +295,21 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
                 background-color: #2c3e50;
                 color: white;
             }}
+            .no-alert {{
+                background-color:#ecf0f1;
+                color:#7f8c8d;
+                padding:12px;
+                border-radius:6px;
+                text-align:center;
+                font-style: italic;
+                margin-top: 10px;
+            }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📌 Alerta de Aniversarios</h1>
-            <p class="description">Personal a punto de cumplir un nuevo año en la empresa.</p>
-            <div class="section">
+            <h1>🎉 Alerta de Aniversarios</h1>
+            <p class="description">Trabajadores próximos a cumplir un nuevo año en la empresa.</p>
     """
 
     df_rango = df.filter(pl.col("ALERTA_ANIVERSARIO") == "< 1 semana")
@@ -347,24 +317,15 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
         columnas = ['NOMBRE_COMPLETO', 'CARGO', 'Fecha Ingreso']
         rows = df_rango.select(columnas).rows()
 
-        tabla_html = "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+        html += "<h3>🎊 Aniversario en menos de una semana</h3>"
+        html += "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
         for row in rows:
-            tabla_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
-        tabla_html += "</table>"
-
-        html += f"""
-                <h3 style="background-color:{color};">A UNA SEMANA</h3>
-                {tabla_html}
-        """
+            html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+        html += "</table>"
     else:
-        html += """
-            <div style="background-color:#ecf0f1; color:#7f8c8d; padding:12px; border-radius:6px; text-align:center;">
-                No hay trabajadores próximos a cumplir aniversario esta semana.
-            </div>
-        """
+        html += "<div class=\"no-alert\">No hay trabajadores próximos a cumplir aniversario esta semana.</div>"
 
     html += """
-            </div>
         </div>
     </body>
     </html>
@@ -374,7 +335,7 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
 # Reporte del consolidado de trabajadores
 def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict) -> str:
     # Automatizar columnas de vacaciones
-    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year + 1)]
+    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year - 1)]
     vacation_columns = [col for col in vacation_years if col in df.columns]
 
     def format_period_and_date(period: str, date_str: str) -> str:
@@ -426,6 +387,18 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
         'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
     ]
 
+    header_labels = {
+        'NOMBRE_COMPLETO': 'Nombre',
+        'DNI': 'DNI',
+        'CARGO': 'Cargo',
+        'Fecha Ingreso': 'Fecha ingreso',
+        'HISTORIAL_VACACIONES': 'Historial',
+        'ESTADO_VACACION_ACTUAL': 'Estado',
+        'VACACIONES_ACUMULADAS': 'Días acumulados',
+        'ALERTA_VACACIONES': 'Proximidad',
+        'ALERTA_ANIVERSARIO': 'Aniversario'
+    }
+
     rows = df.select(columnas).rows()
 
     html = f"""
@@ -437,7 +410,7 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     """
 
     for col in columnas:
-        html += f"<th style=\"background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #ccc;\">{col}</th>"
+        html += f"<th style=\"background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #ccc;\">{header_labels.get(col, col)}</th>"
     html += "</tr>"
 
     for row in rows:
@@ -465,7 +438,7 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
                 value = texto_alerta_vac
             elif columnas[i] == "ALERTA_ANIVERSARIO":
                 value = texto_alerta_aniv
-            html += f"<td style=\"border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
+            html += f"<td style=\"widht: 90%; border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
         html += "</tr>"
 
     html += """
@@ -476,7 +449,6 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     """
 
     return html
-
 
 # Función que genera el HTML personalizado
 def main(
