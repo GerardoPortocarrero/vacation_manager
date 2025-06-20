@@ -383,7 +383,13 @@ def generate_consolidated_report(df: pl.DataFrame, this_year: int, VACACION_GOZA
 
     # Preprocesar el DataFrame
     df = df.with_columns([
-        pl.col("VACACION_GOZADA_ACTUAL").map_dict(VACACION_GOZADA_ACTUAL_ESTADOS).alias("VACACION_GOZADA_ACTUAL"),
+        pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(VACACION_GOZADA_ACTUAL_ESTADOS[0])
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(VACACION_GOZADA_ACTUAL_ESTADOS[1])
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(VACACION_GOZADA_ACTUAL_ESTADOS[2])
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(VACACION_GOZADA_ACTUAL_ESTADOS[3])
+        .otherwise("Desconocido")
+        .alias("VACACION_GOZADA_ACTUAL"),
+
         pl.col("Fecha Ingreso").dt.strftime("%d/%m/%Y").fill_null(""),
         pl.col("Vacaciones 2020-2021").cast(pl.Utf8).fill_null(""),
         pl.col("Vacaciones 2021-2022").cast(pl.Utf8).fill_null(""),
@@ -474,29 +480,34 @@ def main(
         project_address, 
         df, 
         months,
-        VACACION_GOZADA_ACTUAL_ESTADOS, 
-        DNI,
+        VACACION_GOZADA_ACTUAL_ESTADOS,
         CONSOLIDADO,
         PERSONAL, 
         VACACION, 
-        ANIVERSARIO
+        ANIVERSARIO,
+        group_option
     ):
     initial_year = 2020
     today = datetime.today().date()
     this_year = today.year
 
-    conglomerado_report = generate_consolidated_report(df, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
-    with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
-        f.write(conglomerado_report)
+    if group_option == 1:
+        conglomerado_report = generate_consolidated_report(df, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
+        with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
+            f.write(conglomerado_report)
 
-    personal_report = generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
-    with open(os.path.join(project_address, PERSONAL), 'w', encoding='utf-8') as f:
-        f.write(personal_report)
+    elif group_option == 2:
+        DNI = int(input("\n>> Ingresa DNI de personal: "))
+        personal_report = generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
+        with open(os.path.join(project_address, PERSONAL), 'w', encoding='utf-8') as f:
+            f.write(personal_report)
 
-    vacacion_alert = generate_vacation_alert(df, this_year)
-    with open(os.path.join(project_address, VACACION), 'w', encoding='utf-8') as f:
-        f.write(vacacion_alert)
+    elif group_option == 3:
+        vacacion_alert = generate_vacation_alert(df, this_year)
+        with open(os.path.join(project_address, VACACION), 'w', encoding='utf-8') as f:
+            f.write(vacacion_alert)
 
-    anniversary_alert = generate_anniversary_alert(df)
-    with open(os.path.join(project_address, ANIVERSARIO), 'w', encoding='utf-8') as f:
-        f.write(anniversary_alert)
+    elif group_option == 4:
+        anniversary_alert = generate_anniversary_alert(df)
+        with open(os.path.join(project_address, ANIVERSARIO), 'w', encoding='utf-8') as f:
+            f.write(anniversary_alert)
