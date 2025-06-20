@@ -71,6 +71,6 @@ def main(project_address, MAIL_TO, MAIL_CC, html_name, subject):
     print("📄  Reporte generado")
     print("-" * 60)
     print(f"📝 Reporte : {html_name}")
-    print(f"✉️  Correo  : {subject}")
+    print(f"✉️ Correo  : {subject}")
     print("✅ Enviado exitosamente.")
     print("="*60 + "\n")
