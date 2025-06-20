@@ -3,7 +3,7 @@ import polars as pl
 from datetime import datetime
 
 # Reporte personal (se muestra informacion por DNI)
-def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI, LOGO_AYA):
     persona = df.filter(pl.col("DNI") == DNI).to_dicts()[0]
     mes_vacaciones = persona[f'Vacaciones {this_year-1}-{this_year}']
 
@@ -136,7 +136,7 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
     return html
 
 # Reporte de alertas para las personas proximas a entrar en vacaciones
-def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
+def generate_vacation_alert(df: pl.DataFrame, this_year: int, LOGO_AYA) -> str:
     colores = {
         '< 1 semana': '#e74c3c',
         '< 1 mes': '#f1c40f',
@@ -201,7 +201,7 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
     </head>
     <body>
         <div class=\"container\">
-            <h1>📊 Alerta de Vacaciones</h1>
+            <h1>Alerta de Vacaciones</h1>
             <p class=\"description\">Este informe muestra el personal con vacaciones próximas según su programación.</p>
     """
 
@@ -237,7 +237,7 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
     return html
 
 # Reporte de alertas para las personas proximas a cumplir aniversario
-def generate_anniversary_alert(df: pl.DataFrame) -> str:
+def generate_anniversary_alert(df: pl.DataFrame, LOGO_AYA) -> str:
     color = '#3498db'
 
     html = f"""
@@ -258,17 +258,25 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
                 background-color: #ffffff;
                 border-radius: 12px;
                 box-shadow: 0 0 15px rgba(0,0,0,0.08);
+                position: relative;
             }}
-            h1 {{
+            .logo {{
+                position: absolute;
+                top: 20px;
+                left: 30px;
+            }}
+            .title {{
                 text-align: center;
-                font-size: 30px;
+                font-size: 28px;
+                font-weight: bold;
                 color: #2c3e50;
-                margin-bottom: 5px;
+                margin: 0;
             }}
-            .description {{
+            .subtitle {{
                 text-align: center;
-                font-size: 16px;
+                font-size: 15px;
                 color: #7f8c8d;
+                margin-top: 5px;
                 margin-bottom: 30px;
             }}
             h3 {{
@@ -308,8 +316,11 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
     </head>
     <body>
         <div class="container">
-            <h1>🎉 Alerta de Aniversarios</h1>
-            <p class="description">Trabajadores próximos a cumplir un nuevo año en la empresa.</p>
+            <div class="logo">
+                <img src="cid:{LOGO_AYA}" alt="Logo" width="120" style="display: block; border: 0; outline: none; text-decoration: none;">
+            </div>
+            <div class="title">Alerta de Aniversarios</div>
+            <div class="subtitle">Trabajadores próximos a cumplir un nuevo año en la empresa.</div>
     """
 
     df_rango = df.filter(pl.col("ALERTA_ANIVERSARIO") == "< 1 semana")
@@ -333,7 +344,7 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
     return html
 
 # Reporte del consolidado de trabajadores
-def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict) -> str:
+def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict, LOGO_AYA) -> str:
     # Automatizar columnas de vacaciones
     vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year - 1)]
     vacation_columns = [col for col in vacation_years if col in df.columns]
@@ -460,6 +471,7 @@ def main(
         PERSONAL, 
         VACACION, 
         ANIVERSARIO,
+        LOGO_AYA,
         group_option
     ):
     initial_year = 2020
@@ -467,22 +479,44 @@ def main(
     this_year = today.year
 
     if group_option == 1:
-        conglomerado_report = generate_consolidated_report(df, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, months)
+        conglomerado_report = generate_consolidated_report(
+            df, 
+            initial_year, 
+            this_year, 
+            VACACION_GOZADA_ACTUAL_ESTADOS, 
+            months,
+            os.path.join(project_address, LOGO_AYA)
+        )
         with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
             f.write(conglomerado_report)
 
     elif group_option == 2:
         DNI = int(input("\n>> Ingresa DNI de personal: "))
-        personal_report = generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
+        personal_report = generate_personal_report(
+            df, 
+            months, 
+            initial_year, 
+            this_year, 
+            VACACION_GOZADA_ACTUAL_ESTADOS, 
+            DNI, 
+            os.path.join(project_address, LOGO_AYA)
+        )
         with open(os.path.join(project_address, PERSONAL), 'w', encoding='utf-8') as f:
             f.write(personal_report)
 
     elif group_option == 3:
-        vacacion_alert = generate_vacation_alert(df, this_year)
+        vacacion_alert = generate_vacation_alert(
+            df, 
+            this_year, 
+            os.path.join(project_address, LOGO_AYA)
+        )
         with open(os.path.join(project_address, VACACION), 'w', encoding='utf-8') as f:
             f.write(vacacion_alert)
 
     elif group_option == 4:
-        anniversary_alert = generate_anniversary_alert(df)
+        anniversary_alert = generate_anniversary_alert(
+            df, 
+            os.path.join(project_address, LOGO_AYA)
+        )
         with open(os.path.join(project_address, ANIVERSARIO), 'w', encoding='utf-8') as f:
             f.write(anniversary_alert)
