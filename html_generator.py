@@ -371,6 +371,104 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
     """
     return html
 
+# Reporte del consolidado de trabajadores
+def generate_consolidated_report(df: pl.DataFrame, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict) -> str:
+    columnas = [
+        'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
+        'Vacaciones 2020-2021', 'Vacaciones 2021-2022', 'Vacaciones 2022-2023',
+        'Vacaciones 2023-2024', 'Vacaciones 2024-2025',
+        'VACACION_GOZADA_ACTUAL', 'VACACIONES_ACUMULADAS',
+        'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
+    ]
+
+    # Preprocesar el DataFrame
+    df = df.with_columns([
+        pl.col("VACACION_GOZADA_ACTUAL").map_dict(VACACION_GOZADA_ACTUAL_ESTADOS).alias("VACACION_GOZADA_ACTUAL"),
+        pl.col("Fecha Ingreso").dt.strftime("%d/%m/%Y").fill_null(""),
+        pl.col("Vacaciones 2020-2021").cast(pl.Utf8).fill_null(""),
+        pl.col("Vacaciones 2021-2022").cast(pl.Utf8).fill_null(""),
+        pl.col("Vacaciones 2022-2023").cast(pl.Utf8).fill_null(""),
+        pl.col("Vacaciones 2023-2024").cast(pl.Utf8).fill_null(""),
+        pl.col("Vacaciones 2024-2025").cast(pl.Utf8).fill_null("")
+    ])
+
+    rows = df.select(columnas).rows()
+
+    # Armar HTML
+    html = f"""
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f6f8;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 95%;
+                margin: auto;
+                padding: 20px 30px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.08);
+                overflow-x: auto;
+            }}
+            h1 {{
+                text-align: center;
+                font-size: 28px;
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+                table-layout: auto;
+            }}
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 6px;
+                text-align: center;
+                font-size: 13px;
+                vertical-align: middle;
+            }}
+            th {{
+                background-color: #2c3e50;
+                color: white;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📋 Consolidado de Vacaciones</h1>
+            <table>
+                <tr>
+    """
+
+    # Encabezados
+    for col in columnas:
+        html += f"<th>{col}</th>"
+    html += "</tr>"
+
+    # Filas
+    for row in rows:
+        html += "<tr>"
+        for cell in row:
+            value = "" if cell is None else str(cell)
+            html += f"<td>{value}</td>"
+        html += "</tr>"
+
+    html += """
+            </table>
+        </div>
+    </body>
+    </html>
+    """
+
+    return html
+
 # Función que genera el HTML personalizado
 def main(
         project_address, 
@@ -378,6 +476,7 @@ def main(
         months,
         VACACION_GOZADA_ACTUAL_ESTADOS, 
         DNI,
+        CONSOLIDADO,
         PERSONAL, 
         VACACION, 
         ANIVERSARIO
@@ -385,6 +484,10 @@ def main(
     initial_year = 2020
     today = datetime.today().date()
     this_year = today.year
+
+    conglomerado_report = generate_consolidated_report(df, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
+    with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
+        f.write(conglomerado_report)
 
     personal_report = generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
     with open(os.path.join(project_address, PERSONAL), 'w', encoding='utf-8') as f:
