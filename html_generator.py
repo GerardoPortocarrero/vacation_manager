@@ -14,9 +14,9 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
     # Alertas
     alertas = []
     if persona["ALERTA_VACACIONES"] == "< 1 semana":
-        alertas.append('<div style="background-color: #e74c3c; color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">🚨 A una semana de entrar a vacaciones</div>')
+        alertas.append('<div style="background-color: #fdecea; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">🚨 A una semana de entrar a vacaciones</div>')
     elif persona["ALERTA_VACACIONES"] == "< 1 mes":
-        alertas.append('<div style="background-color: #f1c40f; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">⚠️ A un mes de entrar a vacaciones</div>')
+        alertas.append('<div style="background-color: #fff6e5; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">⚠️ A un mes de entrar a vacaciones</div>')
 
     if persona["ALERTA_ANIVERSARIO"] == "< 1 semana":
         alertas.append('<div style="background-color: #3498db; color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">📌 A una semana de cumplir aniversario</div>')
@@ -418,9 +418,7 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
         .alias("ESTADO_VACACION_ACTUAL")
     )
 
-    df = df.with_columns([
-        estado_col
-    ])
+    df = df.with_columns([estado_col])
 
     columnas = [
         'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
@@ -443,9 +441,24 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     html += "</tr>"
 
     for row in rows:
-        html += "<tr>"
-        for cell in row:
+        alerta = row[columnas.index("ALERTA_VACACIONES")]
+        bg_color = ""
+        texto_alerta = ""
+
+        if alerta == "< 1 semana":
+            bg_color = "#fdecea"
+            texto_alerta = "<span style='color: #c0392b;'>🚨 Vacaciones en menos de una semana</span>"
+        elif alerta == "< 1 mes":
+            bg_color = "#fff6e5"
+            texto_alerta = "<span style='color: #d35400;'>⏰ Vacaciones en menos de un mes</span>"
+        else:
+            texto_alerta = alerta
+
+        html += f"<tr style='background-color:{bg_color};'>"
+        for i, cell in enumerate(row):
             value = "" if cell is None else str(cell)
+            if columnas[i] == "ALERTA_VACACIONES":
+                value = texto_alerta
             html += f"<td style=\"border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
         html += "</tr>"
 
@@ -457,7 +470,6 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     """
 
     return html
-
 
 # Función que genera el HTML personalizado
 def main(
