@@ -372,19 +372,31 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
     return html
 
 # Reporte del consolidado de trabajadores
-def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict) -> str:
+def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict) -> str:
     # Automatizar columnas de vacaciones
     vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year + 1)]
     vacation_columns = [col for col in vacation_years if col in df.columns]
 
-    # Crear historial de vacaciones como una sola columna HTML
+    def format_period_and_date(period: str, date_str: str) -> str:
+        if not date_str:
+            return ""
+        try:
+            y1, y2 = period.split()[-1].split('-')
+            date = str(date_str).split(" ")[0]
+            year, month, *_ = date.split("-")
+            month_name = months.get(int(month), "")
+            return f"{y1}-{y2} {month_name}"
+        except:
+            return f"{period}: {date_str}"
+
     df = df.with_columns([
-        pl.struct(vacation_columns).map_elements(lambda row: "<br>".join([
-            f"{col.split()[-1]}: {row[col]}" for col in vacation_columns if row.get(col)
-        ])).alias("HISTORIAL_VACACIONES")
+        pl.struct(vacation_columns).map_elements(
+            lambda row: "<br>".join([
+                format_period_and_date(col, row[col]) for col in vacation_columns if row.get(col)
+            ])
+        ).alias("HISTORIAL_VACACIONES")
     ])
 
-    # Mapear estado de vacaciones
     estado_col = (
         pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[0]))
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[1]))
@@ -408,76 +420,41 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
 
     html = f"""
     <html>
-    <head>
-        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f4f6f8;
-                margin: 0;
-                padding: 0;
-            }}
-            .container {{
-                max-width: 95%;
-                margin: auto;
-                padding: 20px 30px;
-                background-color: #ffffff;
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.08);
-                overflow-x: auto;
-            }}
-            h1 {{
-                text-align: center;
-                font-size: 28px;
-                color: #2c3e50;
-                margin-bottom: 20px;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 25px;
-                table-layout: auto;
-            }}
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 6px;
-                text-align: left;
-                font-size: 13px;
-                vertical-align: top;
-            }}
-            th {{
-                background-color: #2c3e50;
-                color: white;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class=\"container\">
-            <h1>📋 Consolidado de Vacaciones</h1>
-            <table>
-                <tr>
+    <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
+      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);\">
+        <tr>
+          <td colspan=\"2\" valign=\"top\" style=\"padding: 0;\">
+            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: auto; border-collapse: collapse;\">
+              <tr>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">NOMBRE</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">DNI</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">CARGO</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">INGRESO</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">HISTORIAL</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ESTADO ACTUAL</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ACUMULADO</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ALERTA VACACIONES</th>
+                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ALERTA ANIVERSARIO</th>
+              </tr>
     """
-
-    for col in columnas:
-        html += f"<th>{col}</th>"
-    html += "</tr>"
 
     for row in rows:
         html += "<tr>"
         for cell in row:
             value = "" if cell is None else str(cell)
-            html += f"<td>{value}</td>"
+            html += f"<td style=\"border: 1px solid #ccc; padding: 6px; font-size: 13px; vertical-align: top;\">{value}</td>"
         html += "</tr>"
 
     html += """
             </table>
-        </div>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
     """
 
     return html
-
 
 # Función que genera el HTML personalizado
 def main(
@@ -496,7 +473,7 @@ def main(
     this_year = today.year
 
     if group_option == 1:
-        conglomerado_report = generate_consolidated_report(df, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
+        conglomerado_report = generate_consolidated_report(df, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, months)
         with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
             f.write(conglomerado_report)
 
