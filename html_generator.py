@@ -382,16 +382,24 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     ]
 
     # Preprocesar el DataFrame
-    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year)]
-    vacation_columns = [pl.col(col).cast(pl.Utf8).fill_null("") for col in vacation_years]
-
-    df = df.with_columns([
+    estado_col = (
         pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(VACACION_GOZADA_ACTUAL_ESTADOS[0])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(VACACION_GOZADA_ACTUAL_ESTADOS[1])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(VACACION_GOZADA_ACTUAL_ESTADOS[2])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(VACACION_GOZADA_ACTUAL_ESTADOS[3])
         .otherwise("Desconocido")
-        .alias("ESTADO_VACACION_ACTUAL"),
+        .alias("ESTADO_VACACION_ACTUAL")
+    )
+
+    # Automatizar columnas de vacaciones
+    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year + 1)]
+    vacation_columns = [
+        pl.col(col).cast(pl.Utf8).fill_null("") for col in vacation_years if col in df.columns
+    ]
+
+    # Aplicar todas las columnas nuevas
+    df = df.with_columns([
+        estado_col,
         *vacation_columns
     ])
 
