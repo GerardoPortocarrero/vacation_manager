@@ -2,9 +2,10 @@ import os
 import polars as pl
 from datetime import datetime
 
-def generate_vacation_html(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+# Reporte personal (se muestra informacion por DNI)
+def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     persona = df.filter(pl.col("DNI") == DNI).to_dicts()[0]
-    mes_vacaciones = persona['Vacaciones 2024-2025']
+    mes_vacaciones = persona[f'Vacaciones {this_year-1}-{this_year}']
 
     mes_formateado = ""
     if mes_vacaciones is not None:
@@ -134,14 +135,265 @@ def generate_vacation_html(df, months, initial_year, this_year, VACACION_GOZADA_
     """
     return html
 
+# Reporte de alertas para las personas proximas a entrar en vacaciones
+def generate_vacation_alert(df: pl.DataFrame, this_year: int) -> str:
+    colores = {
+        '< 1 semana': '#e74c3c',
+        '< 1 mes': '#f1c40f',
+    }
+
+    html = f"""
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f6f8;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 900px;
+                margin: auto;
+                padding: 20px 30px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.08);
+            }}
+            h1 {{
+                text-align: center;
+                font-size: 30px;
+                color: #2c3e50;
+                margin-bottom: 5px;
+            }}
+            .description {{
+                text-align: center;
+                font-size: 16px;
+                color: #7f8c8d;
+                margin-bottom: 30px;
+            }}
+            .section {{
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 2px solid #ecf0f1;
+            }}
+            .section-title {{
+                text-align: center;
+                font-size: 22px;
+                color: #34495e;
+                position: relative;
+                margin-bottom: 25px;
+            }}
+            .section-title::after {{
+                content: "";
+                display: block;
+                width: 60px;
+                height: 3px;
+                background-color: #3498db;
+                margin: 8px auto 0 auto;
+                border-radius: 2px;
+            }}
+            h3 {{
+                margin: 20px 0 5px 0;
+                padding: 10px;
+                color: white;
+                border-radius: 5px;
+                font-size: 15px;
+                text-align: center;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+            }}
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 6px;
+                text-align: center;
+                font-size: 13px;
+            }}
+            th {{
+                background-color: #2c3e50;
+                color: white;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📊 Alerta de Vacaciones</h1>
+            <p class="description">Personal con vacaciones programadas próximamente.</p>
+            <div class="section">
+    """
+
+    for rango in ['< 1 semana', '< 1 mes']:
+        df_rango = df.filter(pl.col("ALERTA_VACACIONES") == rango)
+        if df_rango.is_empty():
+            continue
+
+        columnas = ['NOMBRE_COMPLETO', 'CARGO', 'VACACIONES_ACUMULADAS', f'Vacaciones {this_year-1}-{this_year}']
+        rows = df_rango.select(columnas).rows()
+
+        # Generar tabla HTML manualmente
+        tabla_html = "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+        for row in rows:
+            tabla_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+        tabla_html += "</table>"
+
+        html += f"""
+                <h3 style="background-color:{colores[rango]};">{rango.upper()}</h3>
+                {tabla_html}
+        """
+
+    html += """
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    return html
+
+# Reporte de alertas para las personas proximas a cumplir aniversario
+def generate_anniversary_alert(df: pl.DataFrame) -> str:
+    color = '#3498db'
+
+    html = f"""
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f6f8;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 900px;
+                margin: auto;
+                padding: 20px 30px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.08);
+            }}
+            h1 {{
+                text-align: center;
+                font-size: 30px;
+                color: #2c3e50;
+                margin-bottom: 5px;
+            }}
+            .description {{
+                text-align: center;
+                font-size: 16px;
+                color: #7f8c8d;
+                margin-bottom: 30px;
+            }}
+            .section {{
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 2px solid #ecf0f1;
+            }}
+            .section-title {{
+                text-align: center;
+                font-size: 22px;
+                color: #34495e;
+                position: relative;
+                margin-bottom: 25px;
+            }}
+            .section-title::after {{
+                content: "";
+                display: block;
+                width: 60px;
+                height: 3px;
+                background-color: #3498db;
+                margin: 8px auto 0 auto;
+                border-radius: 2px;
+            }}
+            h3 {{
+                margin: 20px 0 5px 0;
+                padding: 10px;
+                color: white;
+                border-radius: 5px;
+                font-size: 15px;
+                text-align: center;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+            }}
+            th, td {{
+                border: 1px solid #ccc;
+                padding: 6px;
+                text-align: center;
+                font-size: 13px;
+            }}
+            th {{
+                background-color: #2c3e50;
+                color: white;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📌 Alerta de Aniversarios</h1>
+            <p class="description">Personal a punto de cumplir un nuevo año en la empresa.</p>
+            <div class="section">
+    """
+
+    df_rango = df.filter(pl.col("ALERTA_ANIVERSARIO") == "< 1 semana")
+    if not df_rango.is_empty():
+        columnas = ['NOMBRE_COMPLETO', 'CARGO', 'Fecha Ingreso']
+        rows = df_rango.select(columnas).rows()
+
+        tabla_html = "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+        for row in rows:
+            tabla_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+        tabla_html += "</table>"
+
+        html += f"""
+                <h3 style="background-color:{color};">A UNA SEMANA</h3>
+                {tabla_html}
+        """
+    else:
+        html += """
+            <div style="background-color:#ecf0f1; color:#7f8c8d; padding:12px; border-radius:6px; text-align:center;">
+                No hay trabajadores próximos a cumplir aniversario esta semana.
+            </div>
+        """
+
+    html += """
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
 # Función que genera el HTML personalizado
-def main(project_address, df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+def main(
+        project_address, 
+        df, 
+        months,
+        VACACION_GOZADA_ACTUAL_ESTADOS, 
+        DNI,
+        PERSONAL, 
+        VACACION, 
+        ANIVERSARIO
+    ):
     initial_year = 2020
     today = datetime.today().date()
     this_year = today.year
-    this_month = today.month
 
-    html1 = generate_vacation_html(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
+    personal_report = generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
+    with open(os.path.join(project_address, PERSONAL), 'w', encoding='utf-8') as f:
+        f.write(personal_report)
 
-    with open(os.path.join(project_address, f'vacation.html'), 'w', encoding='utf-8') as f:
-        f.write(html1)
+    vacacion_alert = generate_vacation_alert(df, this_year)
+    with open(os.path.join(project_address, VACACION), 'w', encoding='utf-8') as f:
+        f.write(vacacion_alert)
+
+    anniversary_alert = generate_anniversary_alert(df)
+    with open(os.path.join(project_address, ANIVERSARIO), 'w', encoding='utf-8') as f:
+        f.write(anniversary_alert)

@@ -3,7 +3,7 @@ from datetime import timedelta
 from datetime import datetime
 
 # Crear columna que me indique a cuanto tiempo esta de tener vacaciones
-def create_alert_1(df, this_year, today):
+def create_vacation_alert(df, this_year, today):
     vacaciones_col = f"Vacaciones {this_year-1}-{this_year}"
 
     # Calcular días restantes para vacaciones
@@ -27,7 +27,7 @@ def create_alert_1(df, this_year, today):
     return df
 
 # Crear columna que me indique a cuanto tiempo esta de cumplir aniversario
-def create_alert_2(df, today):
+def create_anniversary_alert(df, today):
     # Paso 1: Calcular el aniversario de este año
     df = df.with_columns([
         pl.datetime(
@@ -197,9 +197,9 @@ def main(df):
     df = create_relevant_columns(df, this_year, this_month, today)
 
     # Alerta 1: A un mes o una semana de entrar a vacaciones
-    df = create_alert_1(df, this_year, today)
+    df = create_vacation_alert(df, this_year, today)
 
     # Alerta 2: A una semana de cumplir aniversario
-    df = create_alert_2(df, today)
+    df = create_anniversary_alert(df, today)
 
     return df
