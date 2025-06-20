@@ -389,12 +389,24 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
         except:
             return f"{period}: {date_str}"
 
+    def format_fecha_ingreso(date_str: str) -> str:
+        try:
+            date = str(date_str).split(" ")[0]
+            year, month, day = date.split("-")
+            month_name = months.get(int(month), "")
+            return f"{int(day)} de {month_name} de {year}"
+        except:
+            return date_str
+
     df = df.with_columns([
         pl.struct(vacation_columns).map_elements(
-            lambda row: "<br>".join([
-                format_period_and_date(col, row[col]) for col in vacation_columns if row.get(col)
-            ])
-        ).alias("HISTORIAL_VACACIONES")
+            lambda row: "<ul style='margin: 0; padding-left: 16px;'>" +
+            "".join([
+                f"<li style='margin-bottom: 4px;'>{format_period_and_date(col, row[col])}</li>"
+                for col in vacation_columns if row.get(col)
+            ]) + "</ul>"
+        ).alias("HISTORIAL_VACACIONES"),
+        pl.col("Fecha Ingreso").map_elements(format_fecha_ingreso).alias("Fecha Ingreso")
     ])
 
     estado_col = (
@@ -421,35 +433,26 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     html = f"""
     <html>
     <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
-      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);\">
-        <tr>
-          <td colspan=\"2\" valign=\"top\" style=\"padding: 0;\">
-            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: auto; border-collapse: collapse;\">
-              <tr>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">NOMBRE</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">DNI</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">CARGO</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">INGRESO</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">HISTORIAL</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ESTADO ACTUAL</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ACUMULADO</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ALERTA VACACIONES</th>
-                <th style=\"background-color: #2c3e50; color: white; padding: 6px;\">ALERTA ANIVERSARIO</th>
-              </tr>
+      <div style=\"max-width: 1000px; margin: auto; background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">
+        <h2 style=\"text-align: center; color: #2c3e50; margin-bottom: 25px;\">📋 Consolidado de Vacaciones</h2>
+        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; table-layout: auto; border-collapse: collapse;\">
+          <tr>
     """
+
+    for col in columnas:
+        html += f"<th style=\"background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #ccc;\">{col}</th>"
+    html += "</tr>"
 
     for row in rows:
         html += "<tr>"
         for cell in row:
             value = "" if cell is None else str(cell)
-            html += f"<td style=\"border: 1px solid #ccc; padding: 6px; font-size: 13px; vertical-align: top;\">{value}</td>"
+            html += f"<td style=\"border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
         html += "</tr>"
 
     html += """
-            </table>
-          </td>
-        </tr>
-      </table>
+        </table>
+      </div>
     </body>
     </html>
     """
