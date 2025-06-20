@@ -1,7 +1,8 @@
 import os
 import polars as pl
+from datetime import datetime
 
-def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
+def generate_vacation_html(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     persona = df.filter(pl.col("DNI") == DNI).to_dicts()[0]
     mes_vacaciones = persona['Vacaciones 2024-2025']
 
@@ -27,7 +28,7 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
     # Historial automatizado
     historial_html = ""
     historial_filas = []
-    for year in range(2021, 2025):
+    for year in range(initial_year, this_year-1):
         col_fecha = f"Vacaciones {year}-{year+1}"
         if col_fecha in persona:
             fecha = persona[col_fecha]
@@ -39,11 +40,20 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
                 historial_filas.append(f"<tr><td>{year}-{year+1}</td><td>-</td><td>Subsidio</td></tr>")
 
     # Agregar el periodo actual si no está en historial
-    periodo_actual = "2024-2025"
-    estado_actual = VACACION_GOZADA_ACTUAL_ESTADOS.get(persona['VACACION_GOZADA_ACTUAL'], 'Desconocido')
+    periodo_actual = f"{this_year-1}-{this_year}"
+    estado_actual = VACACION_GOZADA_ACTUAL_ESTADOS[persona['VACACION_GOZADA_ACTUAL']]
     if not any(periodo_actual in fila for fila in historial_filas):
         if mes_formateado:
             historial_filas.append(f"<tr><td>{periodo_actual}</td><td>{mes_formateado.split()[0]}</td><td>{estado_actual}</td></tr>")
+
+    # Formato de fecha de ingreso
+    fecha_ingreso = persona.get('Fecha Ingreso', '')
+    fecha_ingreso_str = ''
+    if fecha_ingreso and hasattr(fecha_ingreso, 'month'):
+        dia = fecha_ingreso.day
+        mes = months.get(fecha_ingreso.month, '')
+        anio = fecha_ingreso.year
+        fecha_ingreso_str = f"{dia} de {mes} de {anio}"
 
     if historial_filas:
         historial_html = f"""
@@ -81,7 +91,7 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
                   </tr>
                   <tr>
                     <td><strong>Fecha ingreso:</strong></td>
-                    <td>{persona.get('Fecha Ingreso', '')}</td>
+                    <td>{fecha_ingreso_str}</td>
                   </tr>
                   <tr>
                     <td><strong>Localidad:</strong></td>
@@ -126,7 +136,12 @@ def generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
 
 # Función que genera el HTML personalizado
 def main(project_address, df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI):
-    html1 = generate_vacation_html(df, months, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
+    initial_year = 2020
+    today = datetime.today().date()
+    this_year = today.year
+    this_month = today.month
+
+    html1 = generate_vacation_html(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI)
 
     with open(os.path.join(project_address, f'vacation.html'), 'w', encoding='utf-8') as f:
         f.write(html1)
