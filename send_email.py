@@ -67,6 +67,6 @@ def main(project_address, MAIL_TO, MAIL_CC, html_name, subject):
     mail.Send()
 
     # Mensaje Exitoso
-    print(f'\n[*] Estado: Se detecto la alerta {html_name}')
+    print(f'\n[*] Reporte: {html_name}')
     print(f'[*] Correo: {subject}.')
     print(f'[✓] Enviado exitosamente.\n')
