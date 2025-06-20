@@ -372,7 +372,7 @@ def generate_anniversary_alert(df: pl.DataFrame) -> str:
     return html
 
 # Reporte del consolidado de trabajadores
-def generate_consolidated_report(df: pl.DataFrame, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict) -> str:
+def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict) -> str:
     columnas = [
         'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
         'Vacaciones 2020-2021', 'Vacaciones 2021-2022', 'Vacaciones 2022-2023',
@@ -382,20 +382,17 @@ def generate_consolidated_report(df: pl.DataFrame, this_year: int, VACACION_GOZA
     ]
 
     # Preprocesar el DataFrame
+    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year)]
+    vacation_columns = [pl.col(col).cast(pl.Utf8).fill_null("") for col in vacation_years]
+
     df = df.with_columns([
         pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(VACACION_GOZADA_ACTUAL_ESTADOS[0])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(VACACION_GOZADA_ACTUAL_ESTADOS[1])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(VACACION_GOZADA_ACTUAL_ESTADOS[2])
         .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(VACACION_GOZADA_ACTUAL_ESTADOS[3])
         .otherwise("Desconocido")
-        .alias("VACACION_GOZADA_ACTUAL"),
-
-        pl.col("Fecha Ingreso").dt.strftime("%d/%m/%Y").fill_null(""),
-        pl.col("Vacaciones 2020-2021").cast(pl.Utf8).fill_null(""),
-        pl.col("Vacaciones 2021-2022").cast(pl.Utf8).fill_null(""),
-        pl.col("Vacaciones 2022-2023").cast(pl.Utf8).fill_null(""),
-        pl.col("Vacaciones 2023-2024").cast(pl.Utf8).fill_null(""),
-        pl.col("Vacaciones 2024-2025").cast(pl.Utf8).fill_null("")
+        .alias("ESTADO_VACACION_ACTUAL"),
+        *vacation_columns
     ])
 
     rows = df.select(columnas).rows()
@@ -492,7 +489,7 @@ def main(
     this_year = today.year
 
     if group_option == 1:
-        conglomerado_report = generate_consolidated_report(df, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
+        conglomerado_report = generate_consolidated_report(df, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS)
         with open(os.path.join(project_address, CONSOLIDADO), 'w', encoding='utf-8') as f:
             f.write(conglomerado_report)
 
