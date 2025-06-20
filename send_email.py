@@ -67,6 +67,10 @@ def main(project_address, MAIL_TO, MAIL_CC, html_name, subject):
     mail.Send()
 
     # Mensaje Exitoso
-    print(f'\n[*] Reporte: {html_name}')
-    print(f'[*] Correo: {subject}.')
-    print(f'[✓] Enviado exitosamente.\n')
+    print("\n" + "="*40)
+    print("📄  Reporte generado")
+    print("-" * 40)
+    print(f"📝 Reporte : {html_name}")
+    print(f"✉️  Correo  : {subject}")
+    print("✅ Enviado exitosamente.")
+    print("="*40 + "\n")
