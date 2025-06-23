@@ -68,7 +68,7 @@ def main(project_address, MAIL_TO, MAIL_CC, html_name, subject):
 
     # Mensaje Exitoso
     print("\n" + "="*60)
-    print("📄  Reporte generado")
+    print("📄 Reporte generado")
     print("-" * 60)
     print(f"📝 Reporte : {html_name}")
     print(f"✉️ Correo  : {subject}")

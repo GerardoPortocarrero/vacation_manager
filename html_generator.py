@@ -14,12 +14,12 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
     # Alertas
     alertas = []
     if persona["ALERTA_VACACIONES"] == "< 1 semana":
-        alertas.append('<div style="background-color: #fdecea; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">🚨 A una semana de entrar a vacaciones</div>')
+        alertas.append('<div style="background-color: #fdecea; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">🚨  A una semana de entrar a vacaciones</div>')
     elif persona["ALERTA_VACACIONES"] == "< 1 mes":
-        alertas.append('<div style="background-color: #fff6e5; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">⚠️ A un mes de entrar a vacaciones</div>')
+        alertas.append('<div style="background-color: #fff6e5; color: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px;">⚠️  A un mes de entrar a vacaciones</div>')
 
     if persona["ALERTA_ANIVERSARIO"] == "< 1 semana":
-        alertas.append('<div style="background-color: #3498db; color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">📌 A una semana de cumplir aniversario</div>')
+        alertas.append('<div style="background-color: #3498db; color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">📌  A una semana de cumplir aniversario</div>')
 
     if not alertas:
         alertas.append('<div style="background-color: #f8f9fa; color: #7f8c8d; padding: 12px; border-radius: 6px; font-style: italic;">ℹ️ No hay alertas importantes por el momento.</div>')
@@ -75,6 +75,9 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
     # HTML final
     html = f"""
     <html>
+        <div style="text-align: center; margin-top: 10px;">
+            <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+        </div>
         <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
 
         <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);\">
@@ -109,7 +112,7 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
                     </table>
                 </td>
                 <td valign=\"top\" style=\"width: 50%; padding: 20px; text-align: center;\">
-                    <div style=\"background-color: #ecf0f1; padding: 24px 16px; border-radius: 10px; display: inline-block; width: 100%;\">
+                    <div style=\"background-color: #ecf0f1; padding: 24px 8px; border-radius: 10px; display: inline-block; width: 100%;\">
                     <div style=\"font-size: 60px; font-weight: bold; color: #2c3e50; line-height: 1.1;\">{persona['VACACIONES_ACUMULADAS']}<span style=\"font-size: 20px; font-weight: normal; color: #7f8c8d;\"> días</span></div>
                     <div style=\"font-size: 14px; color: #7f8c8d;\">de vacaciones acumuladas</div>
                     </div>
@@ -130,7 +133,8 @@ def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZAD
         </tr>
         </table>
 
-        </body>
+        </body>        
+
     </html>
     """
     return html
@@ -144,65 +148,24 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int, LOGO_AYA) -> str:
 
     html = f"""
     <html>
-    <head>
-        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f4f6f8;
-                margin: 0;
-                padding: 30px;
-            }}
-            .container {{
-                max-width: 1000px;
-                margin: auto;
-                background-color: #fff;
-                border-radius: 10px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.05);
-                padding: 30px;
-            }}
-            h1 {{
-                text-align: center;
-                font-size: 28px;
-                color: #2c3e50;
-                margin-bottom: 10px;
-            }}
-            .description {{
-                text-align: center;
-                font-size: 15px;
-                color: #7f8c8d;
-                margin-bottom: 30px;
-            }}
-            h3 {{
-                margin: 20px 0 10px;
-                padding: 12px;
-                color: white;
-                border-radius: 6px;
-                font-size: 16px;
-                text-align: center;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 14px;
-                border: 1px solid #ccc;
-            }}
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 10px;
-                text-align: center;
-                vertical-align: middle;
-            }}
-            th {{
-                background-color: #2c3e50;
-                color: white;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class=\"container\">
-            <h1>Alerta de Vacaciones</h1>
-            <p class=\"description\">Este informe muestra el personal con vacaciones próximas según su programación.</p>
+    <div style="text-align: center;">
+        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+    </div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+        <tr>
+            <td colspan="2" valign="top" style="padding: 0;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; table-layout: fixed; border-collapse: collapse;">
+                    <tr>
+                        <td style="text-align: center; border: none; padding: 0;">
+                            <div style="font-size: 28px; font-weight: bold; color: #2c3e50;">Alerta de Vacaciones</div>
+                            <div style="font-size: 15px; color: #7f8c8d; margin-top: 6px;">Este informe muestra el personal con vacaciones próximas según su programación.</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="padding: 20px 30px 10px 30px;">
     """
 
     for rango in ['< 1 semana', '< 1 mes']:
@@ -213,7 +176,8 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int, LOGO_AYA) -> str:
         columnas = ['NOMBRE_COMPLETO', 'CARGO', 'VACACIONES_ACUMULADAS', f'Vacaciones {this_year-1}-{this_year}']
         rows = df_rango.select(columnas).rows()
 
-        tabla_html = "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+        tabla_html = "<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; font-size: 13px; width: 100%; margin-bottom: 30px;\">"
+        tabla_html += "<tr style=\"background-color: #2c3e50; color: white;\">" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
         for row in rows:
             tabla_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
         tabla_html += "</table>"
@@ -224,12 +188,16 @@ def generate_vacation_alert(df: pl.DataFrame, this_year: int, LOGO_AYA) -> str:
         }[rango]
 
         html += f"""
-            <h3 style=\"background-color:{colores[rango]};\">{mensaje}</h3>
+            <h3 style="background-color:{colores[rango]}; color: white; padding: 12px; border-radius: 6px; font-size: 16px; text-align: center; margin: 30px 0 10px;">{mensaje}</h3>
             {tabla_html}
         """
 
-    html += """
-        </div>
+    html += f"""
+                </div>
+            </td>
+        </tr>
+    </table>
+
     </body>
     </html>
     """
@@ -242,85 +210,24 @@ def generate_anniversary_alert(df: pl.DataFrame, LOGO_AYA) -> str:
 
     html = f"""
     <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f4f6f8;
-                margin: 0;
-                padding: 0;
-            }}
-            .container {{
-                max-width: 900px;
-                margin: auto;
-                padding: 20px 30px;
-                background-color: #ffffff;
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.08);
-                position: relative;
-            }}
-            .logo {{
-                position: absolute;
-                top: 20px;
-                left: 30px;
-            }}
-            .title {{
-                text-align: center;
-                font-size: 28px;
-                font-weight: bold;
-                color: #2c3e50;
-                margin: 0;
-            }}
-            .subtitle {{
-                text-align: center;
-                font-size: 15px;
-                color: #7f8c8d;
-                margin-top: 5px;
-                margin-bottom: 30px;
-            }}
-            h3 {{
-                background-color: {color};
-                color: white;
-                padding: 12px;
-                border-radius: 6px;
-                font-size: 16px;
-                text-align: center;
-                margin: 20px 0 15px 0;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 25px;
-            }}
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 8px 10px;
-                text-align: center;
-                font-size: 13px;
-            }}
-            th {{
-                background-color: #2c3e50;
-                color: white;
-            }}
-            .no-alert {{
-                background-color:#ecf0f1;
-                color:#7f8c8d;
-                padding:12px;
-                border-radius:6px;
-                text-align:center;
-                font-style: italic;
-                margin-top: 10px;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="logo">
-                <img src="cid:{LOGO_AYA}" alt="Logo" width="120" style="display: block; border: 0; outline: none; text-decoration: none;">
-            </div>
-            <div class="title">Alerta de Aniversarios</div>
-            <div class="subtitle">Trabajadores próximos a cumplir un nuevo año en la empresa.</div>
+    <div style="text-align: center;">
+        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+    </div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+        <tr>
+            <td colspan="2" valign="top" style="padding: 0;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; table-layout: fixed; border-collapse: collapse;">
+                    <tr>
+                        <td style="text-align: center; border: none; padding: 0;">
+                            <div style="font-size: 28px; font-weight: bold; color: #2c3e50;">Alerta de Aniversarios</div>
+                            <div style="font-size: 15px; color: #7f8c8d; margin-top: 6px;">Trabajadores próximos a cumplir un nuevo año en la empresa.</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style="padding: 20px 30px 10px 30px;">
     """
 
     df_rango = df.filter(pl.col("ALERTA_ANIVERSARIO") == "< 1 semana")
@@ -328,19 +235,35 @@ def generate_anniversary_alert(df: pl.DataFrame, LOGO_AYA) -> str:
         columnas = ['NOMBRE_COMPLETO', 'CARGO', 'Fecha Ingreso']
         rows = df_rango.select(columnas).rows()
 
-        html += "<h3>🎊 Aniversario en menos de una semana</h3>"
-        html += "<table><tr>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+        html += f"""
+            <h3 style="background-color:{color}; color: white; padding: 12px; border-radius: 6px; font-size: 16px; text-align: center; margin: 20px 0 15px 0;">
+                🎊 Aniversario en menos de una semana
+            </h3>
+            <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 13px; width: 100%; margin-bottom: 30px;">
+                <tr style="background-color: #2c3e50; color: white;">
+                    {''.join(f"<th>{col}</th>" for col in columnas)}
+                </tr>
+        """
         for row in rows:
             html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
         html += "</table>"
     else:
-        html += "<div class=\"no-alert\">No hay trabajadores próximos a cumplir aniversario esta semana.</div>"
+        html += """
+            <div style="background-color:#ecf0f1; color:#7f8c8d; padding:12px; border-radius:6px; text-align:center; font-style: italic; margin-top: 10px;">
+                No hay trabajadores próximos a cumplir aniversario esta semana.
+            </div>
+        """
 
     html += """
-        </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
     </body>
     </html>
     """
+
     return html
 
 # Reporte del consolidado de trabajadores
@@ -414,6 +337,9 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
 
     html = f"""
     <html>
+    <div style="text-align: center;">
+        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+    </div>
     <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
       <div style=\"margin: auto; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">        
         <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; border-collapse: collapse; border: 1px solid #ccc;\">
