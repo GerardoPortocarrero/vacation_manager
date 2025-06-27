@@ -1,6 +1,128 @@
 import os
 import polars as pl
-from datetime import datetime
+import re
+from datetime import datetime, date
+
+# Reporte del consolidado de trabajadores
+def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict, LOGO_AYA) -> str:
+    # Automatizar columnas de vacaciones
+    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year - 1)]
+    vacation_columns = [col for col in vacation_years if col in df.columns]
+
+    def format_period_and_date(period: str, date_str: str) -> str:
+        if not date_str:
+            return ""
+        try:
+            y1, y2 = period.split()[-1].split('-')
+            date = str(date_str).split(" ")[0]
+            year, month, *_ = date.split("-")
+            month_name = months.get(int(month), "")
+            return f"{y1}-{y2} {month_name}"
+        except:
+            return f"{period}: {date_str}"
+
+    def format_fecha_ingreso(date_str: str) -> str:
+        try:
+            date = str(date_str).split(" ")[0]
+            year, month, day = date.split("-")
+            month_name = months.get(int(month), "")
+            return f"{int(day)} de {month_name} de {year}"
+        except:
+            return date_str
+
+    df = df.with_columns([
+        pl.struct(vacation_columns).map_elements(
+            lambda row: "<ul style='margin: 0; padding-left: 16px;'>" +
+            "".join([
+                f"<li style='margin-bottom: 4px;'>{format_period_and_date(col, row[col])}</li>"
+                for col in vacation_columns if row.get(col)
+            ]) + "</ul>"
+        ).alias("HISTORIAL_VACACIONES"),
+        pl.col("Fecha Ingreso").map_elements(format_fecha_ingreso).alias("Fecha Ingreso")
+    ])
+
+    estado_col = (
+        pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[0]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[1]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[2]))
+        .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[3]))
+        .otherwise(pl.lit("Desconocido"))
+        .alias("ESTADO_VACACION_ACTUAL")
+    )
+
+    df = df.with_columns([estado_col])
+
+    columnas = [
+        'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
+        'HISTORIAL_VACACIONES', 'ESTADO_VACACION_ACTUAL', 'VACACIONES_ACUMULADAS',
+        'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
+    ]
+
+    header_labels = {
+        'NOMBRE_COMPLETO': 'Nombre',
+        'DNI': 'DNI',
+        'CARGO': 'Cargo',
+        'Fecha Ingreso': 'Fecha ingreso',
+        'HISTORIAL_VACACIONES': 'Historial',
+        'ESTADO_VACACION_ACTUAL': 'Estado',
+        'VACACIONES_ACUMULADAS': 'Días acumulados',
+        'ALERTA_VACACIONES': 'Proximidad',
+        'ALERTA_ANIVERSARIO': 'Aniversario'
+    }
+
+    rows = df.select(columnas).rows()
+
+    html = f"""
+    <html>
+    <div style="text-align: center;">
+        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+    </div>
+    <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
+      <div style=\"margin: auto; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">        
+        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; border-collapse: collapse; border: 1px solid #ccc;\">
+          <tr>
+    """
+
+    for col in columnas:
+        html += f"<th style=\"background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #ccc;\">{header_labels.get(col, col)}</th>"
+    html += "</tr>"
+
+    for row in rows:
+        alerta_vac = row[columnas.index("ALERTA_VACACIONES")]
+        alerta_aniv = row[columnas.index("ALERTA_ANIVERSARIO")]
+
+        bg_color = ""
+        texto_alerta_vac = alerta_vac
+        texto_alerta_aniv = alerta_aniv
+
+        if alerta_vac == "< 1 semana":
+            bg_color = "#fdecea"
+            texto_alerta_vac = "<span style='color: #c0392b;'>🚨 Vacaciones en menos de una semana</span>"
+        elif alerta_vac == "< 1 mes":
+            bg_color = "#fff6e5"
+            texto_alerta_vac = "<span style='color: #d35400;'>⏰ Vacaciones en menos de un mes</span>"
+
+        if alerta_aniv == "< 1 semana":
+            texto_alerta_aniv = "<span style='color: #2980b9;'>🎉 Aniversario en menos de una semana</span>"
+
+        html += f"<tr style='background-color:{bg_color};'>"
+        for i, cell in enumerate(row):
+            value = "" if cell is None else str(cell)
+            if columnas[i] == "ALERTA_VACACIONES":
+                value = texto_alerta_vac
+            elif columnas[i] == "ALERTA_ANIVERSARIO":
+                value = texto_alerta_aniv
+            html += f"<td style=\"widht: 90%; border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
+        html += "</tr>"
+
+    html += """
+        </table>
+      </div>
+    </body>
+    </html>
+    """
+
+    return html
 
 # Reporte personal (se muestra informacion por DNI)
 def generate_personal_report(df, months, initial_year, this_year, VACACION_GOZADA_ACTUAL_ESTADOS, DNI, LOGO_AYA):
@@ -266,125 +388,84 @@ def generate_anniversary_alert(df: pl.DataFrame, LOGO_AYA) -> str:
 
     return html
 
-# Reporte del consolidado de trabajadores
-def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year: int, VACACION_GOZADA_ACTUAL_ESTADOS: dict, months: dict, LOGO_AYA) -> str:
-    # Automatizar columnas de vacaciones
-    vacation_years = [f"Vacaciones {y}-{y+1}" for y in range(initial_year, this_year - 1)]
-    vacation_columns = [col for col in vacation_years if col in df.columns]
+# Reporte de alertas para las personas estan a 2 meses de cumplir 2 años sin vacaciones
+def generate_two_year_alert(df: pl.DataFrame, LOGO_AYA: str) -> str:
+    df_alerta = df.filter(pl.col("VACACIONES_ACUMULADAS") > 55)
 
-    def format_period_and_date(period: str, date_str: str) -> str:
-        if not date_str:
-            return ""
-        try:
-            y1, y2 = period.split()[-1].split('-')
-            date = str(date_str).split(" ")[0]
-            year, month, *_ = date.split("-")
-            month_name = months.get(int(month), "")
-            return f"{y1}-{y2} {month_name}"
-        except:
-            return f"{period}: {date_str}"
+    if df_alerta.is_empty():
+        return ""
 
-    def format_fecha_ingreso(date_str: str) -> str:
-        try:
-            date = str(date_str).split(" ")[0]
-            year, month, day = date.split("-")
-            month_name = months.get(int(month), "")
-            return f"{int(day)} de {month_name} de {year}"
-        except:
-            return date_str
+    history_cols = [col for col in df.columns if col.endswith("_original")]
+    columnas_fijas = ["NOMBRE_COMPLETO", "CARGO", "Fecha Ingreso", "VACACIONES_ACUMULADAS"]
 
-    df = df.with_columns([
-        pl.struct(vacation_columns).map_elements(
-            lambda row: "<ul style='margin: 0; padding-left: 16px;'>" +
-            "".join([
-                f"<li style='margin-bottom: 4px;'>{format_period_and_date(col, row[col])}</li>"
-                for col in vacation_columns if row.get(col)
-            ]) + "</ul>"
-        ).alias("HISTORIAL_VACACIONES"),
-        pl.col("Fecha Ingreso").map_elements(format_fecha_ingreso).alias("Fecha Ingreso")
-    ])
-
-    estado_col = (
-        pl.when(pl.col("VACACION_GOZADA_ACTUAL") == 0).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[0]))
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 1).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[1]))
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 2).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[2]))
-        .when(pl.col("VACACION_GOZADA_ACTUAL") == 3).then(pl.lit(VACACION_GOZADA_ACTUAL_ESTADOS[3]))
-        .otherwise(pl.lit("Desconocido"))
-        .alias("ESTADO_VACACION_ACTUAL")
-    )
-
-    df = df.with_columns([estado_col])
-
-    columnas = [
-        'NOMBRE_COMPLETO', 'DNI', 'CARGO', 'Fecha Ingreso',
-        'HISTORIAL_VACACIONES', 'ESTADO_VACACION_ACTUAL', 'VACACIONES_ACUMULADAS',
-        'ALERTA_VACACIONES', 'ALERTA_ANIVERSARIO'
+    cabeceras = columnas_fijas + [
+        col.replace("_original", "").replace("Vacaciones ", "") for col in history_cols
     ]
 
-    header_labels = {
-        'NOMBRE_COMPLETO': 'Nombre',
-        'DNI': 'DNI',
-        'CARGO': 'Cargo',
-        'Fecha Ingreso': 'Fecha ingreso',
-        'HISTORIAL_VACACIONES': 'Historial',
-        'ESTADO_VACACION_ACTUAL': 'Estado',
-        'VACACIONES_ACUMULADAS': 'Días acumulados',
-        'ALERTA_VACACIONES': 'Proximidad',
-        'ALERTA_ANIVERSARIO': 'Aniversario'
-    }
+    # Construcción de tabla HTML
+    tabla_html = "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse: collapse; font-size: 13px; width: 100%;'>"
+    tabla_html += "<tr style='background-color: #d35400; color: white;'>" + "".join(f"<th>{col}</th>" for col in cabeceras) + "</tr>"
 
-    rows = df.select(columnas).rows()
+    for row in df_alerta.iter_rows(named=True):
+        ingreso_year = row["Fecha Ingreso"].year
+        celdas = [
+            row["NOMBRE_COMPLETO"],
+            row["CARGO"],
+            row["Fecha Ingreso"].strftime("%d-%m-%Y") if isinstance(row["Fecha Ingreso"], (datetime, date)) else "",
+            round(row["VACACIONES_ACUMULADAS"], 2)
+        ]
+
+        for col in history_cols:
+            # Extraer el año inicial del periodo de vacaciones
+            match = re.search(r"(\d{4})-\d{4}", col)
+            if match:
+                start_year = int(match.group(1))
+                # Solo mostrar si el año de vacaciones es igual o posterior al año de ingreso
+                if start_year < ingreso_year:
+                    celdas.append("Ausente")
+                    continue
+
+            valor = row.get(col)
+
+            if valor is None or valor == "":
+                celdas.append("Ausente")
+            elif isinstance(valor, str) and "subsidio" in valor.lower():
+                celdas.append("Subsidio")
+            elif isinstance(valor, (datetime, date)):
+                celdas.append(valor.strftime("%d-%m-%Y"))
+            else:
+                celdas.append(str(valor))  # Por si acaso hay algo inesperado
+
+        tabla_html += "<tr>" + "".join(f"<td>{c}</td>" for c in celdas) + "</tr>"
+
+    tabla_html += "</table>"
 
     html = f"""
     <html>
     <div style="text-align: center;">
-        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto; border: 0; outline: none; text-decoration: none;">
+        <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto;">
     </div>
-    <body style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;\">
-      <div style=\"margin: auto; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05); overflow-x: auto;\">        
-        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size: 14px; border-collapse: collapse; border: 1px solid #ccc;\">
-          <tr>
-    """
-
-    for col in columnas:
-        html += f"<th style=\"background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #ccc;\">{header_labels.get(col, col)}</th>"
-    html += "</tr>"
-
-    for row in rows:
-        alerta_vac = row[columnas.index("ALERTA_VACACIONES")]
-        alerta_aniv = row[columnas.index("ALERTA_ANIVERSARIO")]
-
-        bg_color = ""
-        texto_alerta_vac = alerta_vac
-        texto_alerta_aniv = alerta_aniv
-
-        if alerta_vac == "< 1 semana":
-            bg_color = "#fdecea"
-            texto_alerta_vac = "<span style='color: #c0392b;'>🚨 Vacaciones en menos de una semana</span>"
-        elif alerta_vac == "< 1 mes":
-            bg_color = "#fff6e5"
-            texto_alerta_vac = "<span style='color: #d35400;'>⏰ Vacaciones en menos de un mes</span>"
-
-        if alerta_aniv == "< 1 semana":
-            texto_alerta_aniv = "<span style='color: #2980b9;'>🎉 Aniversario en menos de una semana</span>"
-
-        html += f"<tr style='background-color:{bg_color};'>"
-        for i, cell in enumerate(row):
-            value = "" if cell is None else str(cell)
-            if columnas[i] == "ALERTA_VACACIONES":
-                value = texto_alerta_vac
-            elif columnas[i] == "ALERTA_ANIVERSARIO":
-                value = texto_alerta_aniv
-            html += f"<td style=\"widht: 90%; border: 1px solid #ccc; padding: 10px; font-size: 13px; vertical-align: top;\">{value}</td>"
-        html += "</tr>"
-
-    html += """
+    <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+            <tr>
+                <td style="text-align: center;">
+                    <div style="font-size: 26px; font-weight: bold; color: #2c3e50;">
+                        Trabajadores a 2 meses de cumplir 2 años sin vacaciones
+                    </div>
+                    <div style="font-size: 14px; color: #7f8c8d; margin-top: 6px;">
+                        Este informe muestra el historial de personas con más de 55 días acumulados.
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top: 30px;">
+                    {tabla_html}
+                </td>
+            </tr>
         </table>
-      </div>
     </body>
     </html>
     """
-
     return html
 
 # Función que genera el HTML personalizado
@@ -397,6 +478,7 @@ def main(
         PERSONAL, 
         VACACION, 
         ANIVERSARIO,
+        TWO_YEARS_WITHOUT_GOZO,
         LOGO_AYA,
         group_option
     ):
@@ -446,3 +528,11 @@ def main(
         )
         with open(os.path.join(project_address, ANIVERSARIO), 'w', encoding='utf-8') as f:
             f.write(anniversary_alert)
+
+    elif group_option == 5:
+        two_year_alert = generate_two_year_alert(
+            df, 
+            os.path.join(project_address, LOGO_AYA)
+        )
+        with open(os.path.join(project_address, TWO_YEARS_WITHOUT_GOZO), 'w', encoding='utf-8') as f:
+            f.write(two_year_alert)

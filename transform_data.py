@@ -1,6 +1,7 @@
 import polars as pl
+import re
 from datetime import timedelta
-from datetime import datetime
+from datetime import datetime, date
 
 # Crear columna que me indique a cuanto tiempo esta de tener vacaciones
 def create_vacation_alert(df, this_year, today):
@@ -74,7 +75,7 @@ def create_relevant_columns(df, this_year, this_month, today):
     ])
 
     # "VACACIONES_GOZADAS"
-    vaca_cols = [col for col in df.columns if col.startswith("Vacaciones ")]
+    vaca_cols = [col for col in df.columns if col.startswith("Vacaciones ") and not col.endswith("_original")]
 
         # Crear una columna VACACIONES_GOZADAS que cuenta 30 días por cada año de vacaciones cumplido
     vacaciones_gozadas = sum([
@@ -120,7 +121,8 @@ def create_relevant_columns(df, this_year, this_month, today):
     ])
 
     # "VACACIONES_ACUMULADAS" Dias de vacaciones acumuladas que tiene pendiente para gozar
-        # Crear columna de aniversario
+        
+        # Paso 1: Calcular aniversario
     df = df.with_columns([
         pl.datetime(
             pl.when(pl.col("Fecha Ingreso").dt.year() < this_year)
@@ -131,25 +133,57 @@ def create_relevant_columns(df, this_year, this_month, today):
         ).alias("ANIVERSARIO")
     ])
 
-        # Calcular días desde aniversario hasta hoy
+        # Paso 2: Calcular proporcionales desde aniversario hasta hoy
     df = df.with_columns([
-        ((pl.lit(today) - pl.col("ANIVERSARIO")).dt.total_days() / 365 * 30).alias("VACACIONES_PROPORCIONALES")
+        ((pl.lit(today) - pl.col("ANIVERSARIO")).dt.total_days() / 365 * 30)
+        .round(2)
+        .alias("VACACIONES_PROPORCIONALES")
     ])
 
-        # Calcular vacaciones pendientes
+        # Paso 3: Identificar columnas de vacaciones originales (texto, con subsidio)
+    vac_columns = [col for col in df.columns if col.startswith("Vacaciones ") and col.endswith("_original")]
+    vac_column_map = {
+        col: int(re.search(r"(\d{4})-\d{4}", col).group(1))
+        for col in vac_columns
+    }
+
+        # Paso 4: Función para sumar acumuladas
+    def calcular_acumuladas(row):
+        ingreso_year = row["Fecha Ingreso"].year
+        vac_estado = row.get("VACACION_GOZADA_ACTUAL", None)
+        proporcionales = row.get("VACACIONES_PROPORCIONALES", 0.0)
+
+        suma = 0.0
+
+        for col, start_year in vac_column_map.items():
+            if ingreso_year <= start_year < this_year - 1:
+                valor = row.get(col)
+                if valor is None:
+                    suma += 30.0
+                elif isinstance(valor, str) and "subsidio" in valor.lower():
+                    continue  # subsidio → no suma
+                elif isinstance(valor, (datetime, date)):
+                    suma += 30.0
+                else:
+                    continue
+
+        # Último periodo
+        if vac_estado in [0, 2, 3]:
+            suma += proporcionales
+        elif vac_estado == 1 and proporcionales > 30:
+            suma += proporcionales - 30
+
+        return round(suma, 2)
+
+        # Paso 5: Aplicar en Polars
     df = df.with_columns([
-        (
-            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 2, 3]))  # gozando y no ha gozado
-            .then(pl.col("VACACIONES_PROPORCIONALES"))
-            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([1]) & ((pl.col("VACACIONES_PROPORCIONALES")-30) > 0))  # ya gozó
-            .then(pl.col("VACACIONES_PROPORCIONALES")-30)
-            .otherwise(0.0)
-        ).round(2).alias("VACACIONES_ACUMULADAS")
+        pl.struct(["Fecha Ingreso", "VACACION_GOZADA_ACTUAL", "VACACIONES_PROPORCIONALES"] + list(vac_column_map.keys()))
+        .map_elements(calcular_acumuladas)
+        .alias("VACACIONES_ACUMULADAS")
     ])
 
-    # (Opcional) eliminar columna intermedia si no quieres dejarla
-    df = df.drop("VACACIONES_PROPORCIONALES")
-    df = df.drop("ANIVERSARIO")
+        # Paso 6: Limpieza
+    df = df.drop(["ANIVERSARIO", "VACACIONES_PROPORCIONALES"])
     
     return df
 
@@ -169,17 +203,18 @@ def create_column_fullname(df):
 
 # Establecer los tipos de datos correctos en las columnas
 def set_data_types(df, initial_year, this_year, date_format):
-    # Setear fecha de ingreso
+    # Convertir 'Fecha Ingreso' a datetime
     df = df.with_columns([
-        pl.col('Fecha Ingreso').str.strptime(pl.Datetime, format=date_format)
+        pl.col("Fecha Ingreso").str.strptime(pl.Datetime, format=date_format)
     ])
 
-    # Setear registro historico
+    # Convertir cada columna de vacaciones y guardar su valor original
     for year in range(initial_year, this_year):
+        col = f"Vacaciones {year}-{year+1}"
         df = df.with_columns([
-            pl.col(f'Vacaciones {year}-{year+1}').str.strptime(pl.Datetime, format=date_format, strict=False)
+            pl.col(col).alias(f"{col}_original"),  # respaldo original
+            pl.col(col).str.strptime(pl.Datetime, format=date_format, strict=False)
         ])
-
     return df
     
 # Funcion principal
