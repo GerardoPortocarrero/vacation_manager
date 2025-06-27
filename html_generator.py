@@ -215,7 +215,7 @@ def generate_anniversary_alert(df: pl.DataFrame, LOGO_AYA) -> str:
     </div>
     <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
         <tr>
             <td colspan="2" valign="top" style="padding: 0;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; table-layout: fixed; border-collapse: collapse;">
