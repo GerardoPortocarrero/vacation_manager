@@ -122,8 +122,13 @@ def create_relevant_columns(df, this_year, this_month, today):
     # "VACACIONES_ACUMULADAS" Dias de vacaciones acumuladas que tiene pendiente para gozar
         # Crear columna de aniversario
     df = df.with_columns([
-        pl.datetime(this_year-1, pl.col("Fecha Ingreso").dt.month(), pl.col("Fecha Ingreso").dt.day())
-        .alias("ANIVERSARIO")
+        pl.datetime(
+            pl.when(pl.col("Fecha Ingreso").dt.year() < this_year)
+            .then(this_year - 1)
+            .otherwise(this_year),
+            pl.col("Fecha Ingreso").dt.month(),
+            pl.col("Fecha Ingreso").dt.day()
+        ).alias("ANIVERSARIO")
     ])
 
         # Calcular días desde aniversario hasta hoy
@@ -134,9 +139,9 @@ def create_relevant_columns(df, this_year, this_month, today):
         # Calcular vacaciones pendientes
     df = df.with_columns([
         (
-            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([2, 3]))  # gozando y no ha gozado
+            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 2, 3]))  # gozando y no ha gozado
             .then(pl.col("VACACIONES_PROPORCIONALES"))
-            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 1]))  # ya gozó
+            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([1]) & ((pl.col("VACACIONES_PROPORCIONALES")-30) > 0))  # ya gozó
             .then(pl.col("VACACIONES_PROPORCIONALES")-30)
             .otherwise(0.0)
         ).round(2).alias("VACACIONES_ACUMULADAS")
