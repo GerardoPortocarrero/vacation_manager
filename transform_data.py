@@ -134,9 +134,9 @@ def create_relevant_columns(df, this_year, this_month, today):
         # Calcular vacaciones pendientes
     df = df.with_columns([
         (
-            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 2, 3]))  # gozando y no ha gozado
+            pl.when(pl.col("VACACION_GOZADA_ACTUAL").is_in([2, 3]))  # gozando y no ha gozado
             .then(pl.col("VACACIONES_PROPORCIONALES"))
-            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([1]))  # ya gozó
+            .when(pl.col("VACACION_GOZADA_ACTUAL").is_in([0, 1]))  # ya gozó
             .then(pl.col("VACACIONES_PROPORCIONALES")-30)
             .otherwise(0.0)
         ).round(2).alias("VACACIONES_ACUMULADAS")
