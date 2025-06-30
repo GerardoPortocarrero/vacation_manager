@@ -393,7 +393,31 @@ def generate_two_year_alert(df: pl.DataFrame, LOGO_AYA: str) -> str:
     df_alerta = df.filter(pl.col("VACACIONES_ACUMULADAS") > 55)
 
     if df_alerta.is_empty():
-        return ""
+        # HTML vacío pero con estilo amigable y logo
+        return f"""
+        <html>
+        <div style="text-align: center;">
+            <img src="cid:{LOGO_AYA}" alt="Logo" width="160" style="display: block; margin: auto;">
+        </div>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+                <tr>
+                    <td style="text-align: center;">
+                        <div style="font-size: 26px; font-weight: bold; color: #2c3e50;">
+                            Trabajadores a 2 meses de cumplir 2 años sin vacaciones
+                        </div>
+                        <div style="font-size: 14px; color: #7f8c8d; margin-top: 6px;">
+                            Este informe muestra el historial de personas con más de 55 días acumulados.
+                        </div>
+                        <div style="margin-top: 30px; font-size: 15px; color: #16a085; font-weight: bold;">
+                            No se encontraron trabajadores en esta condición.
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
 
     history_cols = [col for col in df.columns if col.endswith("_original")]
     columnas_fijas = ["NOMBRE_COMPLETO", "CARGO", "Fecha Ingreso", "VACACIONES_ACUMULADAS"]

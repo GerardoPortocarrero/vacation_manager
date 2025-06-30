@@ -192,12 +192,14 @@ def create_column_fullname(df):
     # Unir columnas y limpiar caracteres no deseados
     df = df.with_columns([
         (
-            (pl.col("NOMBRES") + " " + pl.col("APELLIDOS"))
+            (pl.col("APELLIDOS") + " " + pl.col("NOMBRES"))
             .str.replace_all(r"[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]", "")  # Eliminar todo menos letras y espacios
             .str.strip_chars()
             .alias("NOMBRE_COMPLETO")
         )
     ])
+
+    df = df.sort("NOMBRE_COMPLETO")
 
     return df
 
