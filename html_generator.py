@@ -88,19 +88,24 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
     html += "</tr>"
 
     for row in rows:
+        vac_acumuladas = row[columnas.index("VACACIONES_ACUMULADAS")]
         alerta_vac = row[columnas.index("ALERTA_VACACIONES")]
         alerta_aniv = row[columnas.index("ALERTA_ANIVERSARIO")]
 
         bg_color = ""
+        texto_vac_acumuladas = vac_acumuladas
         texto_alerta_vac = alerta_vac
         texto_alerta_aniv = alerta_aniv
 
-        if alerta_vac == "< 1 semana":
+        if int(texto_vac_acumuladas) > 30:
             bg_color = "#fdecea"
-            texto_alerta_vac = "<span style='color: #c0392b;'>🚨 Vacaciones en menos de una semana</span>"
+            texto_vac_acumuladas = f"<span style='color: #b63704;'>🚨 {texto_vac_acumuladas}</span>"
+        elif alerta_vac == "< 1 semana":
+            bg_color = "#f5ffe5"
+            texto_alerta_vac = "<span style='color: #70b604;'>Vacaciones en menos de una semana</span>"
         elif alerta_vac == "< 1 mes":
-            bg_color = "#fff6e5"
-            texto_alerta_vac = "<span style='color: #d35400;'>⏰ Vacaciones en menos de un mes</span>"
+            bg_color = "#fffee5"
+            texto_alerta_vac = "<span style='color: #c3d300;'>⏰ Vacaciones en menos de un mes</span>"
 
         if alerta_aniv == "< 1 semana":
             texto_alerta_aniv = "<span style='color: #2980b9;'>🎉 Aniversario en menos de una semana</span>"
@@ -108,7 +113,9 @@ def generate_consolidated_report(df: pl.DataFrame, initial_year: int, this_year:
         html += f"<tr style='background-color:{bg_color};'>"
         for i, cell in enumerate(row):
             value = "" if cell is None else str(cell)
-            if columnas[i] == "ALERTA_VACACIONES":
+            if columnas[i] == "VACACIONES_ACUMULADAS":
+                value = texto_vac_acumuladas
+            elif columnas[i] == "ALERTA_VACACIONES":
                 value = texto_alerta_vac
             elif columnas[i] == "ALERTA_ANIVERSARIO":
                 value = texto_alerta_aniv
